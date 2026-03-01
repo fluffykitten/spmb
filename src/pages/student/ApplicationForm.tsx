@@ -5,7 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { DynamicFormRenderer } from '../../components/DynamicFormRenderer';
 import { FormField, defaultFormSchema } from '../../lib/defaultFormSchema';
 import { Save, Send, AlertCircle, CheckCircle } from 'lucide-react';
-import { sendWhatsAppNotification } from '../../lib/whatsappNotification';
+import { sendWhatsAppNotification, sendWhatsAppGroupNotification } from '../../lib/whatsappNotification';
 import { FIELD_NAMES, getFieldValue } from '../../lib/fieldConstants';
 
 export const ApplicationForm: React.FC = () => {
@@ -291,6 +291,18 @@ export const ApplicationForm: React.FC = () => {
           console.error('Error sending WhatsApp notification:', err);
         });
       }
+
+      // Send group notification for new registration
+      sendWhatsAppGroupNotification({
+        templateKey: 'group_new_registration',
+        variables: {
+          nama_lengkap: namaLengkap || 'Calon Siswa',
+          registration_number: registrationNumber || 'Belum tersedia',
+          tanggal: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+        }
+      }).catch(err => {
+        console.error('Error sending group notification:', err);
+      });
 
       setStatus('submitted');
       setMessage({ type: 'success', text: 'Formulir berhasil disubmit! Notifikasi WhatsApp akan dikirim. Anda akan diarahkan ke halaman dokumen...' });

@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { CheckCircle, XCircle, Loader, Eye, EyeOff, AlertCircle } from 'lucide-react';
-import { getWhatsAppStats } from '../../lib/whatsappNotification';
+import { CheckCircle, XCircle, Loader, Eye, EyeOff, AlertCircle, Users } from 'lucide-react';
+import { getWhatsAppStats, sendWhatsAppGroupNotification } from '../../lib/whatsappNotification';
 
 interface ConfigState {
   fonnte_api_token: string;
   fonnte_country_code: string;
   fonnte_enabled: boolean;
+  fonnte_group_id: string;
+  fonnte_group_enabled: boolean;
 }
 
 export const WhatsAppSettings: React.FC = () => {
   const [config, setConfig] = useState<ConfigState>({
     fonnte_api_token: '',
     fonnte_country_code: '62',
-    fonnte_enabled: false
+    fonnte_enabled: false,
+    fonnte_group_id: '',
+    fonnte_group_enabled: false
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -35,7 +39,7 @@ export const WhatsAppSettings: React.FC = () => {
       const { data, error } = await supabase
         .from('app_config')
         .select('key, value')
-        .in('key', ['fonnte_api_token', 'fonnte_country_code', 'fonnte_enabled']);
+        .in('key', ['fonnte_api_token', 'fonnte_country_code', 'fonnte_enabled', 'fonnte_group_id', 'fonnte_group_enabled']);
 
       if (error) throw error;
 
@@ -44,7 +48,9 @@ export const WhatsAppSettings: React.FC = () => {
       setConfig({
         fonnte_api_token: (configMap.get('fonnte_api_token') as string) || '',
         fonnte_country_code: (configMap.get('fonnte_country_code') as string) || '62',
-        fonnte_enabled: (configMap.get('fonnte_enabled') as boolean) || false
+        fonnte_enabled: (configMap.get('fonnte_enabled') as boolean) || false,
+        fonnte_group_id: (configMap.get('fonnte_group_id') as string) || '',
+        fonnte_group_enabled: (configMap.get('fonnte_group_enabled') as boolean) || false
       });
 
       if (configMap.get('fonnte_api_token')) {
@@ -70,7 +76,9 @@ export const WhatsAppSettings: React.FC = () => {
       const updates = [
         { key: 'fonnte_api_token', value: config.fonnte_api_token },
         { key: 'fonnte_country_code', value: config.fonnte_country_code },
-        { key: 'fonnte_enabled', value: config.fonnte_enabled }
+        { key: 'fonnte_enabled', value: config.fonnte_enabled },
+        { key: 'fonnte_group_id', value: config.fonnte_group_id },
+        { key: 'fonnte_group_enabled', value: config.fonnte_group_enabled }
       ];
 
       for (const update of updates) {
@@ -315,6 +323,85 @@ export const WhatsAppSettings: React.FC = () => {
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Users className="h-5 w-5 text-blue-600" />
+          <h3 className="text-lg font-semibold text-slate-800">Group Notification Settings</h3>
+        </div>
+
+        <div className="space-y-4 max-w-2xl">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              WhatsApp Group ID *
+            </label>
+            <input
+              type="text"
+              value={config.fonnte_group_id}
+              onChange={(e) => setConfig({ ...config, fonnte_group_id: e.target.value })}
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="120363379743282885@g.us"
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              Format: <code className="bg-slate-100 px-1 rounded">GROUP_ID@g.us</code>. Dapatkan dari Fonnte Dashboard atau dari info grup WhatsApp.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 pt-2">
+            <input
+              type="checkbox"
+              id="fonnte_group_enabled"
+              checked={config.fonnte_group_enabled}
+              onChange={(e) => setConfig({ ...config, fonnte_group_enabled: e.target.checked })}
+              className="h-5 w-5 text-blue-600 border-slate-300 rounded focus:ring-2 focus:ring-blue-500"
+            />
+            <label htmlFor="fonnte_group_enabled" className="text-sm font-medium text-slate-700">
+              Enable Group Notifications
+            </label>
+          </div>
+          <p className="text-xs text-slate-500">
+            Jika aktif, notifikasi akan dikirim ke grup WhatsApp saat: pendaftaran baru, perubahan status, dan jadwal interview.
+          </p>
+
+          <div className="pt-2">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saving ? 'Saving...' : 'Save Group Settings'}
+            </button>
+          </div>
+
+          <div className="border-t border-slate-200 pt-4">
+            <h4 className="text-sm font-medium text-slate-700 mb-2">Test Group Message</h4>
+            <button
+              onClick={async () => {
+                setTesting(true);
+                setTestResult(null);
+                try {
+                  const result = await sendWhatsAppGroupNotification({
+                    message: '🔔 Ini adalah pesan tes dari sistem SPMB ke grup WhatsApp. Jika Anda menerima pesan ini, berarti konfigurasi grup sudah benar!'
+                  });
+                  setTestResult({ success: result.success, message: result.message || result.error || 'Unknown result' });
+                } catch (err) {
+                  setTestResult({ success: false, message: (err as Error).message });
+                } finally {
+                  setTesting(false);
+                }
+              }}
+              disabled={testing || !config.fonnte_group_enabled || !config.fonnte_group_id}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {testing && <Loader className="h-4 w-4 animate-spin" />}
+              Send Test to Group
+            </button>
+            <p className="text-xs text-slate-500 mt-1">
+              Kirim pesan tes ke grup WhatsApp yang telah dikonfigurasi
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
         <h3 className="text-lg font-semibold text-slate-800 mb-4">Test Connection</h3>
 
         <div className="space-y-4 max-w-2xl">
@@ -355,8 +442,8 @@ export const WhatsAppSettings: React.FC = () => {
 
           {testResult && (
             <div className={`p-4 rounded-lg border ${testResult.success
-                ? 'bg-emerald-50 border-emerald-200'
-                : 'bg-red-50 border-red-200'
+              ? 'bg-emerald-50 border-emerald-200'
+              : 'bg-red-50 border-red-200'
               }`}>
               <div className="flex items-start gap-2">
                 {testResult.success ? (

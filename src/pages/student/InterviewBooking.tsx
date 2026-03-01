@@ -189,6 +189,19 @@ export const InterviewBooking: React.FC = () => {
 
         if (error) throw error;
         alert('Permintaan interview berhasil diajukan!');
+
+        // Send group notification for interview scheduled
+        const { sendWhatsAppGroupNotification } = await import('../../lib/whatsappNotification');
+        sendWhatsAppGroupNotification({
+          templateKey: 'group_interview_scheduled',
+          variables: {
+            nama_lengkap: user?.user_metadata?.full_name || 'Calon Siswa',
+            interview_date: formData.proposed_date,
+            interview_time: `${formData.proposed_time_start} - ${proposed_time_end}`
+          }
+        }).catch(err => {
+          console.error('Error sending group notification:', err);
+        });
       }
 
       setShowForm(false);
@@ -349,11 +362,10 @@ export const InterviewBooking: React.FC = () => {
                 Format Interview <span className="text-red-500">*</span>
               </label>
               <div className="grid grid-cols-2 gap-4">
-                <label className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                  formData.proposed_type === 'offline'
+                <label className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${formData.proposed_type === 'offline'
                     ? 'border-blue-500 bg-blue-50'
                     : 'border-slate-200 hover:border-slate-300'
-                }`}>
+                  }`}>
                   <input
                     type="radio"
                     name="type"
@@ -371,11 +383,10 @@ export const InterviewBooking: React.FC = () => {
                   </div>
                 </label>
 
-                <label className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                  formData.proposed_type === 'online'
+                <label className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${formData.proposed_type === 'online'
                     ? 'border-blue-500 bg-blue-50'
                     : 'border-slate-200 hover:border-slate-300'
-                }`}>
+                  }`}>
                   <input
                     type="radio"
                     name="type"

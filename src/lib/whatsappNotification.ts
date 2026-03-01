@@ -198,6 +198,54 @@ export async function sendWhatsAppNotification(params: WhatsAppNotificationParam
   }
 }
 
+export interface WhatsAppGroupNotificationParams {
+  templateKey?: string;
+  variables?: Record<string, any>;
+  message?: string;
+}
+
+export async function sendWhatsAppGroupNotification(params: WhatsAppGroupNotificationParams): Promise<{
+  success: boolean;
+  message?: string;
+  error?: string;
+}> {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      return { success: false, error: 'Not authenticated' };
+    }
+
+    const apiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/whatsapp/send-group`;
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        templateKey: params.templateKey,
+        variables: params.variables,
+        message: params.message,
+      }),
+    });
+
+    const result = await response.json();
+
+    return {
+      success: result.success || false,
+      message: result.message,
+      error: result.error,
+    };
+  } catch (error) {
+    console.error('Error sending group notification:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to send group notification'
+    };
+  }
+}
+
 export async function getWhatsAppLogs(applicantId?: string, limit: number = 10): Promise<WhatsAppLog[]> {
   try {
     let query = supabase

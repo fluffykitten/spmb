@@ -8,7 +8,7 @@ import { Eye, Trash2, Filter, Download, Mail, FileSpreadsheet, CheckCircle, File
 import { exportApplicantsToExcel, exportAcceptedApplicantsToExcel } from '../../lib/excelExport';
 import { FIELD_NAMES, getFieldValue } from '../../lib/fieldConstants';
 import { isImagePath, getSignedImageUrl } from '../../lib/imageHelpers';
-import { sendWhatsAppNotification } from '../../lib/whatsappNotification';
+import { sendWhatsAppNotification, sendWhatsAppGroupNotification } from '../../lib/whatsappNotification';
 import { sendDocumentsAvailableNotification } from '../../lib/examNotifications';
 
 interface Applicant {
@@ -165,6 +165,34 @@ export const StudentManagement: React.FC = () => {
               console.warn('⚠ Error sending document notification:', err);
             });
           }
+        }
+      }
+
+      // Send group notification for status changes
+      if (data && (newStatus === 'approved' || newStatus === 'rejected' || newStatus === 'draft')) {
+        const namaLengkap = getFieldValue(data.dynamic_data, FIELD_NAMES.NAMA_LENGKAP) || 'Calon Siswa';
+        let groupTemplateKey = '';
+        const groupVars: Record<string, any> = {
+          nama_lengkap: namaLengkap,
+          registration_number: data.registration_number || 'Belum tersedia',
+        };
+
+        if (newStatus === 'approved') {
+          groupTemplateKey = 'group_status_approved';
+        } else if (newStatus === 'rejected') {
+          groupTemplateKey = 'group_status_rejected';
+        } else if (newStatus === 'draft') {
+          groupTemplateKey = 'group_status_revision';
+          groupVars.admin_comments = data.admin_comments || 'Mohon periksa kembali data Anda.';
+        }
+
+        if (groupTemplateKey) {
+          sendWhatsAppGroupNotification({
+            templateKey: groupTemplateKey,
+            variables: groupVars,
+          }).catch(err => {
+            console.error('Error sending group notification:', err);
+          });
         }
       }
 
