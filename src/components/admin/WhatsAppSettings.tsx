@@ -74,11 +74,11 @@ export const WhatsAppSettings: React.FC = () => {
       setSaving(true);
 
       const updates = [
-        { key: 'fonnte_api_token', value: config.fonnte_api_token },
-        { key: 'fonnte_country_code', value: config.fonnte_country_code },
-        { key: 'fonnte_enabled', value: config.fonnte_enabled },
-        { key: 'fonnte_group_id', value: config.fonnte_group_id },
-        { key: 'fonnte_group_enabled', value: config.fonnte_group_enabled }
+        { key: 'fonnte_api_token', value: JSON.stringify(config.fonnte_api_token) },
+        { key: 'fonnte_country_code', value: JSON.stringify(config.fonnte_country_code) },
+        { key: 'fonnte_enabled', value: JSON.stringify(config.fonnte_enabled) },
+        { key: 'fonnte_group_id', value: JSON.stringify(config.fonnte_group_id) },
+        { key: 'fonnte_group_enabled', value: JSON.stringify(config.fonnte_group_enabled) }
       ];
 
       for (const update of updates) {
