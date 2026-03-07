@@ -63,7 +63,7 @@ export const getAvailableTemplatesForStudent = async (
       return { templates: [], applicantStatus: applicant.status, error: templatesError.message };
     }
 
-    const availableTemplates = (templates || []).filter(template => {
+    const availableTemplates = (templates || []).filter((template: any) => {
       if (template.access_rule === 'all') {
         return true;
       }
@@ -104,7 +104,7 @@ export const checkGenerationLimit = async (
       throw new Error('Template not found');
     }
 
-    const { data: generation, error: generationError } = await supabase
+    const { data: generation } = await supabase
       .from('document_generations')
       .select('generation_count, last_generated_at')
       .eq('applicant_id', applicantId)
@@ -149,7 +149,7 @@ export const incrementGenerationCount = async (
 
     if (error) {
       console.error('Error incrementing generation count:', error);
-      return { success: false, newCount: 0, error: error.message };
+      return { success: false, newCount: 0, error: (error as Error).message };
     }
 
     return { success: true, newCount: data };
@@ -199,7 +199,7 @@ export const uploadDocxTemplate = async (
 
     if (uploadError) {
       console.error('Upload error:', uploadError);
-      return { success: false, error: uploadError.message };
+      return { success: false, error: (uploadError as Error).message };
     }
 
     return { success: true, url: fileName };
@@ -228,7 +228,7 @@ export const uploadLetterheadImage = async (
 
     if (uploadError) {
       console.error('Upload error:', uploadError);
-      return { success: false, error: uploadError.message };
+      return { success: false, error: (uploadError as Error).message };
     }
 
     return { success: true, url: fileName };

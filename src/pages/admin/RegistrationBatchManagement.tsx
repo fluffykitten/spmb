@@ -346,11 +346,10 @@ export const RegistrationBatchManagement: React.FC = () => {
       </div>
 
       {actionResult && (
-        <div className={`p-4 rounded-lg border ${
-          actionResult.type === 'success'
-            ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-            : 'bg-red-50 border-red-200 text-red-800'
-        }`}>
+        <div className={`p-4 rounded-lg border ${actionResult.type === 'success'
+          ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+          : 'bg-red-50 border-red-200 text-red-800'
+          }`}>
           <div className="flex items-start gap-3">
             {actionResult.type === 'success' ? (
               <CheckCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
@@ -386,9 +385,8 @@ export const RegistrationBatchManagement: React.FC = () => {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.name ? 'border-red-300' : 'border-slate-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.name ? 'border-red-300' : 'border-slate-300'
+                    }`}
                   placeholder="Contoh: Gelombang 1"
                 />
                 {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name}</p>}
@@ -430,9 +428,8 @@ export const RegistrationBatchManagement: React.FC = () => {
                   type="date"
                   value={formData.start_date}
                   onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.start_date ? 'border-red-300' : 'border-slate-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.start_date ? 'border-red-300' : 'border-slate-300'
+                    }`}
                 />
                 {errors.start_date && <p className="text-sm text-red-600 mt-1">{errors.start_date}</p>}
               </div>
@@ -445,9 +442,8 @@ export const RegistrationBatchManagement: React.FC = () => {
                   type="date"
                   value={formData.end_date}
                   onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.end_date ? 'border-red-300' : 'border-slate-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.end_date ? 'border-red-300' : 'border-slate-300'
+                    }`}
                 />
                 {errors.end_date && <p className="text-sm text-red-600 mt-1">{errors.end_date}</p>}
               </div>
@@ -462,9 +458,8 @@ export const RegistrationBatchManagement: React.FC = () => {
                   type="number"
                   value={formData.entrance_fee_amount}
                   onChange={(e) => setFormData({ ...formData, entrance_fee_amount: e.target.value })}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.entrance_fee_amount ? 'border-red-300' : 'border-slate-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.entrance_fee_amount ? 'border-red-300' : 'border-slate-300'
+                    }`}
                   min="0"
                   step="1000"
                   placeholder="0"
@@ -480,9 +475,8 @@ export const RegistrationBatchManagement: React.FC = () => {
                   type="number"
                   value={formData.administration_fee_amount}
                   onChange={(e) => setFormData({ ...formData, administration_fee_amount: e.target.value })}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.administration_fee_amount ? 'border-red-300' : 'border-slate-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.administration_fee_amount ? 'border-red-300' : 'border-slate-300'
+                    }`}
                   min="0"
                   step="1000"
                   placeholder="0"
@@ -564,11 +558,10 @@ export const RegistrationBatchManagement: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => toggleActive(batch)}
-                    className={`p-2 rounded-lg transition-colors ${
-                      batch.is_active
-                        ? 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                        : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'
-                    }`}
+                    className={`p-2 rounded-lg transition-colors ${batch.is_active
+                      ? 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'
+                      }`}
                     title={batch.is_active ? 'Nonaktifkan' : 'Aktifkan'}
                   >
                     {batch.is_active ? <XCircle className="h-5 w-5" /> : <CheckCircle className="h-5 w-5" />}
@@ -726,12 +719,13 @@ export const RegistrationBatchManagement: React.FC = () => {
 
       {deleteConfirm && (
         <ConfirmDialog
+          isOpen={!!deleteConfirm}
           title="Hapus Gelombang Pendaftaran"
           message="Apakah Anda yakin ingin menghapus gelombang pendaftaran ini? Siswa yang sudah terdaftar tidak akan terpengaruh, tetapi referensi ke gelombang ini akan dihapus."
-          confirmLabel="Hapus"
-          cancelLabel="Batal"
+          confirmText="Hapus"
+          cancelText="Batal"
           onConfirm={() => handleDelete(deleteConfirm)}
-          onCancel={() => setDeleteConfirm(null)}
+          onClose={() => setDeleteConfirm(null)}
           variant="danger"
         />
       )}

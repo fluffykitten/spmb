@@ -43,7 +43,7 @@ export const WhatsAppSettings: React.FC = () => {
 
       if (error) throw error;
 
-      const configMap = new Map(data?.map(c => [c.key, c.value]) || []);
+      const configMap = new Map(data?.map((c: any) => [c.key, c.value]) || []);
 
       setConfig({
         fonnte_api_token: (configMap.get('fonnte_api_token') as string) || '',

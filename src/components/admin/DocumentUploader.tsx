@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, X, FileText, AlertCircle } from 'lucide-react';
 import { uploadApplicantDocument } from '../../lib/documentAccess';
-import { AccessRule, getAccessRuleLabel } from '../../lib/letterAccess';
+import { AccessRule } from '../../lib/letterAccess';
 
 interface DocumentUploaderProps {
   onUploadComplete: () => void;
@@ -108,11 +108,10 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({ onUploadComp
     <div className="space-y-6">
       <div
         {...getRootProps()}
-        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-          isDragActive
+        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${isDragActive
             ? 'border-blue-500 bg-blue-50'
             : 'border-gray-300 hover:border-gray-400'
-        }`}
+          }`}
       >
         <input {...getInputProps()} />
         <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />

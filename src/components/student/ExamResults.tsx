@@ -111,7 +111,7 @@ export const ExamResults: React.FC<ExamResultsProps> = ({ applicantId }) => {
       console.log('[ExamResults] Loaded', answersData?.length, 'answers for PDF');
 
       const questionIds = answersData?.map(a => a.question.id) || [];
-      let allOptions: Record<string, any[]> = {};
+      const allOptions: Record<string, any[]> = {};
       if (questionIds.length > 0) {
         const { data: optionsData } = await supabase
           .from('exam_question_options')

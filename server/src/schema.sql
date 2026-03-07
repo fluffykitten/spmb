@@ -461,3 +461,28 @@ CREATE INDEX IF NOT EXISTS idx_exam_attempts_applicant ON exam_attempts(applican
 CREATE INDEX IF NOT EXISTS idx_exam_answers_attempt ON exam_answers(attempt_id);
 CREATE INDEX IF NOT EXISTS idx_exam_tokens_code ON exam_tokens(token_code);
 CREATE INDEX IF NOT EXISTS idx_interview_bookings_applicant ON interview_bookings(applicant_id);
+
+------------------------------------------------------------
+-- LETTERHEAD CONFIG
+------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS letterhead_config (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  config_key TEXT UNIQUE NOT NULL DEFAULT 'global',
+  letterhead_image_url TEXT,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+------------------------------------------------------------
+-- INTERVIEW REQUESTS
+------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS interview_requests (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  applicant_id UUID NOT NULL REFERENCES applicants(id) ON DELETE CASCADE,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled')),
+  requested_at TIMESTAMPTZ DEFAULT NOW(),
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);

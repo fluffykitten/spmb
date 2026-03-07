@@ -132,7 +132,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    let subject = template.subject
+    const subject = template.subject
       .replace(/\{\{interviewer_name\}\}/g, interviewer_name)
       .replace(/\{\{student_name\}\}/g, student_name)
       .replace(/\{\{registration_number\}\}/g, registration_number)

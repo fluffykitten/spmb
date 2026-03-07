@@ -4,7 +4,7 @@ import { DataTable, Column } from '../../components/shared/DataTable';
 import { StatusBadge } from '../../components/shared/StatusBadge';
 import { ConfirmDialog } from '../../components/shared/ConfirmDialog';
 import { LetterGenerationModal } from '../../components/admin/LetterGenerationModal';
-import { Eye, Trash2, Filter, Download, Mail, FileSpreadsheet, CheckCircle, FileText, Search, X, ChevronDown, MessageSquare, Save } from 'lucide-react';
+import { Eye, Trash2, Filter, Download, FileSpreadsheet, CheckCircle, FileText, Search, X, ChevronDown, MessageSquare, Save } from 'lucide-react';
 import { exportApplicantsToExcel, exportAcceptedApplicantsToExcel } from '../../lib/excelExport';
 import { FIELD_NAMES, getFieldValue } from '../../lib/fieldConstants';
 import { isImagePath, getSignedImageUrl } from '../../lib/imageHelpers';
@@ -82,7 +82,7 @@ export const StudentManagement: React.FC = () => {
         return;
       }
 
-      const userIds = applicantsData.map(a => a.user_id);
+      const userIds = applicantsData.map((a: any) => a.user_id);
 
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
@@ -94,10 +94,10 @@ export const StudentManagement: React.FC = () => {
       }
 
       const profilesMap = new Map(
-        profilesData?.map(p => [p.user_id, p]) || []
+        profilesData?.map((p: any) => [p.user_id, p]) || []
       );
 
-      const enrichedApplicants = applicantsData.map(applicant => ({
+      const enrichedApplicants = applicantsData.map((applicant: any) => ({
         ...applicant,
         profiles: profilesMap.get(applicant.user_id) || null
       }));
@@ -357,14 +357,14 @@ export const StudentManagement: React.FC = () => {
   const columns: Column<Applicant>[] = [
     {
       key: 'select',
-      label: (
+      label: ((
         <input
           type="checkbox"
           checked={selectedApplicants.size === filteredApplicants.length && filteredApplicants.length > 0}
           onChange={handleSelectAll}
           className="rounded border-slate-300 text-blue-600"
         />
-      ),
+      ) as unknown) as string,
       render: (item) => (
         <input
           type="checkbox"

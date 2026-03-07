@@ -73,7 +73,7 @@ export const StudentDashboard: React.FC = () => {
   const [examResults, setExamResults] = useState<ExamResult[]>([]);
   const [batchName, setBatchName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const { totalGenerated, totalDownloaded, totalNotDownloaded, loading: generationsLoading } = useStudentGenerations();
+  const { totalGenerated, totalDownloaded } = useStudentGenerations();
 
   useEffect(() => {
     fetchData();
@@ -83,11 +83,11 @@ export const StudentDashboard: React.FC = () => {
     if (!user) return;
 
     try {
-      const { data: appData, error: appError } = await supabase
+      const { data: appData, error: appError } = await (supabase
         .from('applicants')
         .select('*')
         .eq('user_id', user.id)
-        .maybeSingle();
+        .maybeSingle() as any);
 
       if (appError) throw appError;
       setApplication(appData);
@@ -97,37 +97,37 @@ export const StudentDashboard: React.FC = () => {
           setBatchName((appData.registration_batches as any).name);
         }
 
-        const { data: interviewData } = await supabase
+        const { data: interviewData } = await (supabase
           .from('interview_requests')
           .select('*')
           .eq('applicant_id', appData.id)
           .in('status', ['pending_review', 'revision_requested', 'approved'])
           .order('created_at', { ascending: false })
           .limit(1)
-          .maybeSingle();
+          .maybeSingle() as any);
 
         if (interviewData) {
           setInterviewRequest(interviewData);
         }
 
-        const { data: paymentData } = await supabase
+        const { data: paymentData } = await (supabase
           .from('payment_records')
           .select('*')
           .eq('applicant_id', appData.id)
-          .order('payment_type', { ascending: true });
+          .order('payment_type', { ascending: true }) as any);
 
         if (paymentData) {
           setPaymentRecords(paymentData);
         }
 
-        const { data: attemptsData } = await supabase
+        const { data: attemptsData } = await (supabase
           .from('exam_attempts')
           .select('id')
           .eq('applicant_id', appData.id)
-          .eq('status', 'completed');
+          .eq('status', 'completed') as any);
 
         if (attemptsData && attemptsData.length > 0) {
-          const { data: resultsData } = await supabase
+          const { data: resultsData } = await (supabase
             .from('exam_results')
             .select(`
               *,
@@ -138,8 +138,8 @@ export const StudentDashboard: React.FC = () => {
                 exam:exams!inner(title, passing_score)
               )
             `)
-            .in('attempt_id', attemptsData.map(a => a.id))
-            .order('created_at', { ascending: false });
+            .in('attempt_id', attemptsData.map((a: any) => a.id))
+            .order('created_at', { ascending: false }) as any);
 
           if (resultsData) {
             console.log('[StudentDashboard] Loaded exam results:', resultsData.length);

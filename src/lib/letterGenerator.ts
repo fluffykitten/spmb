@@ -250,7 +250,7 @@ export const generateCompleteHTML = (
   applicant: Applicant,
   letterNumber: string
 ): string => {
-  let processedContent = replaceVariables(template.html_content, applicant, letterNumber);
+  const processedContent = replaceVariables(template.html_content, applicant, letterNumber);
 
   const letterhead = buildLetterHead(template.letterhead_config);
   const signature = buildSignature(template.signature_config);

@@ -3,24 +3,23 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   LayoutDashboard,
-  Users,
-  FileText,
-  Settings,
   LogOut,
-  Menu,
-  X,
   School,
-  UserCog,
-  BarChart3,
-  FolderOpen,
-  FileCode,
+  Database,
   Calendar,
   ClipboardList,
   FileArchive,
   MessageSquare,
   Ticket,
+  UserCog,
+  BarChart3,
+  Users,
+  FolderOpen,
+  FileCode,
   Waves,
-  Database,
+  FileText,
+  Settings,
+  Menu
 } from 'lucide-react';
 
 export const AdminLayout: React.FC = () => {
@@ -54,13 +53,11 @@ export const AdminLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className={`fixed inset-0 bg-slate-900 bg-opacity-50 z-40 lg:hidden transition-opacity ${
-        sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-      }`} onClick={() => setSidebarOpen(false)} />
+      <div className={`fixed inset-0 bg-slate-900 bg-opacity-50 z-40 lg:hidden transition-opacity ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`} onClick={() => setSidebarOpen(false)} />
 
-      <aside className={`fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-slate-200 transform transition-transform lg:translate-x-0 ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
+      <aside className={`fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-slate-200 transform transition-transform lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}>
         <div className="h-full flex flex-col">
           <div className="p-6 border-b border-slate-200">
             <div className="flex items-center gap-3">
@@ -83,11 +80,10 @@ export const AdminLayout: React.FC = () => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    isActive
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'text-slate-600 hover:bg-slate-50'
-                  }`}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
+                    ? 'bg-blue-50 text-blue-600'
+                    : 'text-slate-600 hover:bg-slate-50'
+                    }`}
                 >
                   <Icon className="h-5 w-5" />
                   <span className="font-medium">{item.label}</span>

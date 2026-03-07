@@ -305,8 +305,8 @@ export async function getWhatsAppStats(period: 'today' | 'week' | 'month' = 'tod
     }
 
     const total = data?.length || 0;
-    const sent = data?.filter(log => log.status === 'sent').length || 0;
-    const failed = data?.filter(log => log.status === 'failed').length || 0;
+    const sent = data?.filter((log: any) => log.status === 'sent').length || 0;
+    const failed = data?.filter((log: any) => log.status === 'failed').length || 0;
     const successRate = total > 0 ? (sent / total) * 100 : 0;
 
     return { total, sent, failed, successRate };

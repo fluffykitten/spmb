@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { DataTable, Column } from '../../components/shared/DataTable';
 import { ConfirmDialog } from '../../components/shared/ConfirmDialog';
 import { TemplateConfigWizard } from '../../components/admin/TemplateConfigWizard';
-import { Plus, Edit2, Trash2, Copy, Eye } from 'lucide-react';
+import { Plus, Edit2, Trash2, Copy } from 'lucide-react';
 
 interface LetterTemplate {
   id: string;

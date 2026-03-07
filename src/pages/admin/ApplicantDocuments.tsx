@@ -434,14 +434,14 @@ export const ApplicantDocuments: React.FC = () => {
         isOpen={deleteDialog.isOpen}
         title="Hapus Dokumen"
         message="Apakah Anda yakin ingin menghapus dokumen ini? Tindakan ini tidak dapat dibatalkan."
-        confirmLabel="Hapus"
+        confirmText="Hapus"
         onConfirm={() => {
           if (deleteDialog.documentId) {
             handleDelete(deleteDialog.documentId);
           }
           setDeleteDialog({ isOpen: false, documentId: null });
         }}
-        onCancel={() => setDeleteDialog({ isOpen: false, documentId: null })}
+        onClose={() => setDeleteDialog({ isOpen: false, documentId: null })}
       />
     </div>
   );

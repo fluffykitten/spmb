@@ -11,7 +11,6 @@ import {
   Phone,
   Mail,
   Globe,
-  CheckCircle,
   Users,
   GraduationCap,
   Award,
@@ -89,7 +88,7 @@ export const Landing: React.FC = () => {
     try {
       setLoading(true);
 
-      const [slidesResult, configResult] = await Promise.all([
+      const [slidesResult, configResult] = await Promise.all<any>([
         supabase
           .from('slideshow_images')
           .select('*')
@@ -124,7 +123,7 @@ export const Landing: React.FC = () => {
 
       if (configResult.data) {
         const configMap: any = {};
-        configResult.data.forEach((item) => {
+        configResult.data.forEach((item: any) => {
           configMap[item.key] = item.value;
         });
         setConfig((prev) => ({ ...prev, ...configMap }));

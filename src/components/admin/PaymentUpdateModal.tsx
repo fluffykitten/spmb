@@ -148,7 +148,7 @@ export const PaymentUpdateModal: React.FC<PaymentUpdateModalProps> = ({
         totalAmount: record.total_amount,
         status: record.payment_status as any,
         amountPaid: 0,
-        paymentMethod: record.payment_method || 'cash',
+        paymentMethod: (record.payment_method || 'cash') as 'cash' | 'transfer' | 'other',
         paymentDate: record.payment_date
           ? new Date(record.payment_date).toISOString().split('T')[0]
           : new Date().toISOString().split('T')[0],
@@ -168,7 +168,7 @@ export const PaymentUpdateModal: React.FC<PaymentUpdateModalProps> = ({
         formData
       });
 
-      const { data, error } = await supabase.rpc('admin_update_payment_status', {
+      const { error } = await supabase.rpc('admin_update_payment_status', {
         p_applicant_id: applicantId,
         p_payment_type: activePaymentType,
         p_new_status: formData.status,
@@ -317,11 +317,10 @@ export const PaymentUpdateModal: React.FC<PaymentUpdateModalProps> = ({
             <div className="flex gap-4 mb-6">
               <button
                 onClick={() => handlePaymentTypeChange('entrance_fee')}
-                className={`flex-1 px-4 py-3 rounded-lg border-2 transition-colors ${
-                  activePaymentType === 'entrance_fee'
-                    ? 'border-blue-600 bg-blue-50 text-blue-700'
-                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                }`}
+                className={`flex-1 px-4 py-3 rounded-lg border-2 transition-colors ${activePaymentType === 'entrance_fee'
+                  ? 'border-blue-600 bg-blue-50 text-blue-700'
+                  : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                  }`}
               >
                 <div className="font-medium">Biaya Masuk</div>
                 {paymentRecords.entrance_fee && (
@@ -333,11 +332,10 @@ export const PaymentUpdateModal: React.FC<PaymentUpdateModalProps> = ({
               </button>
               <button
                 onClick={() => handlePaymentTypeChange('administration_fee')}
-                className={`flex-1 px-4 py-3 rounded-lg border-2 transition-colors ${
-                  activePaymentType === 'administration_fee'
-                    ? 'border-blue-600 bg-blue-50 text-blue-700'
-                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                }`}
+                className={`flex-1 px-4 py-3 rounded-lg border-2 transition-colors ${activePaymentType === 'administration_fee'
+                  ? 'border-blue-600 bg-blue-50 text-blue-700'
+                  : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                  }`}
               >
                 <div className="font-medium">Biaya Administrasi</div>
                 {paymentRecords.administration_fee && (

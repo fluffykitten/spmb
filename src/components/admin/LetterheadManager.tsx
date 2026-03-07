@@ -22,9 +22,9 @@ export const LetterheadManager: React.FC = () => {
     fetchConfig();
   }, []);
 
-  const fetchConfig = async () => {
+  const fetchConfig = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
-      setLoading(true);
       const { data, error } = await supabase
         .from('letterhead_config')
         .select('id, letterhead_image_url')
@@ -34,10 +34,11 @@ export const LetterheadManager: React.FC = () => {
       if (error) throw error;
 
       if (data) {
-        setConfig({
-          id: data.id,
+        setConfig((prev) => ({
+          ...prev,
+          id: data.id || undefined,
           letterhead_image_url: data.letterhead_image_url || ''
-        });
+        } as LetterheadConfig));
       }
     } catch (error) {
       console.error('Error fetching config:', error);
@@ -54,7 +55,7 @@ export const LetterheadManager: React.FC = () => {
       const result = await uploadLetterheadImage(file, 'letterhead');
 
       if (result.success && result.url) {
-        setConfig(prev => ({ ...prev, letterhead_image_url: result.url }));
+        setConfig(prev => ({ ...prev, letterhead_image_url: result.url as string }));
         setMessage({ type: 'success', text: 'Gambar kop surat berhasil diupload!' });
       } else {
         setMessage({ type: 'error', text: result.error || 'Gagal upload gambar' });
@@ -93,7 +94,7 @@ export const LetterheadManager: React.FC = () => {
       if (error) throw error;
 
       setMessage({ type: 'success', text: 'Konfigurasi kop surat berhasil disimpan!' });
-      await fetchConfig();
+      await fetchConfig(false);
     } catch (error) {
       console.error('Error saving config:', error);
       setMessage({ type: 'error', text: 'Gagal menyimpan konfigurasi' });
@@ -130,9 +131,8 @@ export const LetterheadManager: React.FC = () => {
         </p>
 
         {message && (
-          <div className={`mb-6 p-4 rounded-lg flex items-start gap-2 ${
-            message.type === 'success' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
-          }`}>
+          <div className={`mb-6 p-4 rounded-lg flex items-start gap-2 ${message.type === 'success' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+            }`}>
             {message.type === 'success' ? (
               <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
             ) : (
@@ -195,9 +195,8 @@ export const LetterheadManager: React.FC = () => {
 
           <label
             htmlFor="letterhead-upload"
-            className={`inline-flex items-center gap-2 px-6 py-3 bg-white border-2 border-blue-600 text-blue-600 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors font-medium ${
-              uploading ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+            className={`inline-flex items-center gap-2 px-6 py-3 bg-white border-2 border-blue-600 text-blue-600 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors font-medium ${uploading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
           >
             {uploading ? (
               <>

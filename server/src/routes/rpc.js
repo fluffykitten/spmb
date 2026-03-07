@@ -19,7 +19,9 @@ router.post('/:functionName', authenticateToken, async (req, res) => {
             case 'admin_get_all_profiles': {
                 const { rows } = await pool.query(`
           SELECT p.user_id as id, p.user_id, p.role, p.full_name, p.email, 
-                 p.phone, p.phone_number, p.is_active, p.created_at, p.updated_at
+                 COALESCE(p.phone, p.phone_number) as phone, 
+                 COALESCE(p.phone, p.phone_number) as phone_number,
+                 p.is_active, p.created_at, p.updated_at
           FROM profiles p ORDER BY p.created_at DESC
         `);
                 result = rows;

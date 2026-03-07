@@ -57,8 +57,61 @@ const ALLOWED_TABLES = [
     'exam_tokens', 'exam_token_redemptions', 'audit_logs',
     'whatsapp_notification_logs', 'document_generations', 'form_schemas',
     'registration_batches', 'slideshow_images', 'interview_requests', 'whatsapp_logs',
-    'whatsapp_templates'
+    'whatsapp_templates',
+    'user_monitoring_status', 'letterhead_config'
 ];
+
+// Virtual views - these are complex queries that look like tables to the frontend
+const VIRTUAL_VIEWS = {
+    'user_monitoring_status': `
+        SELECT 
+            p.id as profile_id,
+            p.user_id,
+            p.full_name,
+            p.email,
+            COALESCE(p.phone, p.phone_number) as phone_number,
+            a.id as applicant_id,
+            a.registration_number,
+            a.status as form_status,
+            a.created_at as application_date,
+            a.interview_status,
+            a.interview_score,
+            a.exam_status,
+            a.exam_score,
+            a.final_score,
+            COALESCE(doc_count.cnt, 0)::int as documents_downloaded_count,
+            COALESCE(doc_total.cnt, 0)::int as total_documents_count,
+            ir.status as latest_interview_request_status,
+            COALESCE(ea_count.cnt, 0)::int as exam_attempts_count,
+            pr_entrance.payment_status as entrance_fee_status,
+            pr_entrance.paid_amount as entrance_fee_paid,
+            pr_entrance.total_amount as entrance_fee_total,
+            pr_admin.payment_status as administration_fee_status,
+            pr_admin.paid_amount as administration_fee_paid,
+            pr_admin.total_amount as administration_fee_total
+        FROM profiles p
+        LEFT JOIN applicants a ON a.user_id = p.user_id
+        LEFT JOIN LATERAL (
+            SELECT COUNT(*)::int as cnt FROM document_generations dg WHERE dg.applicant_id = a.id
+        ) doc_count ON true
+        LEFT JOIN LATERAL (
+            SELECT COUNT(*)::int as cnt FROM letter_templates lt WHERE lt.is_active = true AND (lt.is_available_for_students = true OR lt.is_self_service = true)
+        ) doc_total ON true
+        LEFT JOIN LATERAL (
+            SELECT ir2.status FROM interview_requests ir2 
+            WHERE ir2.applicant_id = a.id 
+            ORDER BY ir2.created_at DESC LIMIT 1
+        ) ir ON true
+        LEFT JOIN LATERAL (
+            SELECT COUNT(*)::int as cnt FROM exam_attempts ea WHERE ea.applicant_id = a.id
+        ) ea_count ON true
+        LEFT JOIN payment_records pr_entrance ON pr_entrance.applicant_id = a.id AND pr_entrance.payment_type = 'entrance_fee'
+        LEFT JOIN payment_records pr_admin ON pr_admin.applicant_id = a.id AND pr_admin.payment_type = 'administration_fee'
+        WHERE p.role = 'student'
+        ORDER BY a.created_at DESC NULLS LAST
+    `,
+    'letterhead_config': null // Use the actual table name
+};
 
 // Tables that can be queried without authentication (public landing page)
 const PUBLIC_TABLES = ['app_config', 'registration_batches', 'slideshow_images'];
@@ -95,9 +148,16 @@ router.post('/query', async (req, res) => {
             }
         }
 
-        const { sql, params } = buildSelectQuery(table, { select, filters, order, limit, offset, single });
-        const { rows } = await pool.query(sql, params);
-        res.json({ data: single ? (rows[0] || null) : rows, error: null });
+        // Check if this is a virtual view
+        if (table in VIRTUAL_VIEWS && VIRTUAL_VIEWS[table]) {
+            const viewSql = VIRTUAL_VIEWS[table];
+            const { rows } = await pool.query(viewSql);
+            res.json({ data: single ? (rows[0] || null) : rows, error: null });
+        } else {
+            const { sql, params } = buildSelectQuery(table, { select, filters, order, limit, offset, single });
+            const { rows } = await pool.query(sql, params);
+            res.json({ data: single ? (rows[0] || null) : rows, error: null });
+        }
     } catch (err) {
         console.error('Query error:', err);
         res.status(400).json({ data: null, error: err.message });

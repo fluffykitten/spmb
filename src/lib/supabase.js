@@ -84,10 +84,18 @@ class QueryBuilder {
     single() { this._single = true; this._limit = 1; return this; }
     maybeSingle() { this._maybeSingle = true; this._single = true; this._limit = 1; return this; }
 
+    /**
+     * @param {any} resolve
+     * @param {any} [reject]
+     * @returns {Promise<any>}
+     */
     then(resolve, reject) {
-        this._execute().then(resolve, reject);
+        return this._execute().then(resolve, reject);
     }
 
+    /**
+     * @returns {Promise<{data: any, error: any, count?: number}>}
+     */
     async _execute() {
         const resp = await apiFetch('/api/data/query', {
             method: 'POST',
@@ -135,23 +143,27 @@ class InsertBuilder {
         this._single = false;
     }
     select(cols) { this._returning = cols || '*'; return this; }
-    single() { this._single = true; return this; }
+    /**
+     * @param {any} resolve
+     * @param {any} [reject]
+     * @returns {Promise<any>}
+     */
     then(resolve, reject) {
-        (async () => {
+        return (async () => {
             try {
                 const resp = await apiFetch('/api/data/insert', {
                     method: 'POST',
                     body: JSON.stringify({ table: this._table, data: this._data, returning: this._returning }),
                 });
                 const json = await resp.json();
-                if (json.error) return resolve({ data: null, error: { message: json.error } });
+                if (json.error) return { data: null, error: { message: json.error } };
                 let data = json.data;
                 if (this._single && Array.isArray(data)) data = data[0] || null;
-                return resolve({ data, error: null });
+                return { data, error: null };
             } catch (err) {
-                return resolve({ data: null, error: err });
+                return { data: null, error: err };
             }
-        })();
+        })().then(resolve, reject);
     }
 }
 
@@ -166,23 +178,27 @@ class UpdateBuilder {
     eq(column, value) { this._filters.push({ column, op: 'eq', value }); return this; }
     in(column, values) { this._filters.push({ column, op: 'in', value: values }); return this; }
     select(cols) { this._returning = cols || '*'; return this; }
-    single() { this._single = true; return this; }
+    /**
+     * @param {any} resolve
+     * @param {any} [reject]
+     * @returns {Promise<any>}
+     */
     then(resolve, reject) {
-        (async () => {
+        return (async () => {
             try {
                 const resp = await apiFetch('/api/data/update', {
                     method: 'POST',
                     body: JSON.stringify({ table: this._table, data: this._data, filters: this._filters, returning: this._returning }),
                 });
                 const json = await resp.json();
-                if (json.error) return resolve({ data: null, error: { message: json.error } });
+                if (json.error) return { data: null, error: { message: json.error } };
                 let data = json.data;
                 if (this._single && Array.isArray(data)) data = data[0] || null;
-                return resolve({ data, error: null });
+                return { data, error: null };
             } catch (err) {
-                return resolve({ data: null, error: err });
+                return { data: null, error: err };
             }
-        })();
+        })().then(resolve, reject);
     }
 }
 
@@ -192,21 +208,25 @@ class DeleteBuilder {
         this._filters = [];
     }
     eq(column, value) { this._filters.push({ column, op: 'eq', value }); return this; }
-    in(column, values) { this._filters.push({ column, op: 'in', value: values }); return this; }
+    /**
+     * @param {any} resolve
+     * @param {any} [reject]
+     * @returns {Promise<any>}
+     */
     then(resolve, reject) {
-        (async () => {
+        return (async () => {
             try {
                 const resp = await apiFetch('/api/data/delete', {
                     method: 'POST',
                     body: JSON.stringify({ table: this._table, filters: this._filters }),
                 });
                 const json = await resp.json();
-                if (json.error) return resolve({ data: null, error: { message: json.error } });
-                return resolve({ data: json.data, error: null });
+                if (json.error) return { data: null, error: { message: json.error } };
+                return { data: json.data, error: null };
             } catch (err) {
-                return resolve({ data: null, error: err });
+                return { data: null, error: err };
             }
-        })();
+        })().then(resolve, reject);
     }
 }
 
@@ -219,23 +239,27 @@ class UpsertBuilder {
         this._single = false;
     }
     select(cols) { this._returning = cols || '*'; return this; }
-    single() { this._single = true; return this; }
+    /**
+     * @param {any} resolve
+     * @param {any} [reject]
+     * @returns {Promise<any>}
+     */
     then(resolve, reject) {
-        (async () => {
+        return (async () => {
             try {
                 const resp = await apiFetch('/api/data/upsert', {
                     method: 'POST',
                     body: JSON.stringify({ table: this._table, data: this._data, onConflict: this._onConflict, returning: this._returning }),
                 });
                 const json = await resp.json();
-                if (json.error) return resolve({ data: null, error: { message: json.error } });
+                if (json.error) return { data: null, error: { message: json.error } };
                 let data = json.data;
                 if (this._single && Array.isArray(data)) data = data[0] || null;
-                return resolve({ data, error: null });
+                return { data, error: null };
             } catch (err) {
-                return resolve({ data: null, error: err });
+                return { data: null, error: err };
             }
-        })();
+        })().then(resolve, reject);
     }
 }
 
@@ -452,6 +476,7 @@ class ChannelStub {
 // ============================================================
 // Main export
 // ============================================================
+/** @type {import('@supabase/supabase-js').SupabaseClient} */
 export const supabase = {
     from: (table) => ({
         select: (columns, options) => new QueryBuilder(table).select(columns, options),

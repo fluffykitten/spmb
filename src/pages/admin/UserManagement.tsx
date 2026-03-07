@@ -58,7 +58,7 @@ export const UserManagement: React.FC = () => {
   const handleDelete = async (userId: string) => {
     try {
       console.log('[UserManagement] Deleting user:', userId);
-      const { data, error } = await supabase.rpc('admin_delete_profile', {
+      const { error } = await supabase.rpc('admin_delete_profile', {
         target_user_id: userId
       });
 
@@ -113,11 +113,10 @@ export const UserManagement: React.FC = () => {
       label: 'Role',
       sortable: true,
       render: (item) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-          item.role === 'admin'
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.role === 'admin'
             ? 'bg-purple-100 text-purple-700'
             : 'bg-blue-100 text-blue-700'
-        }`}>
+          }`}>
           {item.role}
         </span>
       )
@@ -132,11 +131,10 @@ export const UserManagement: React.FC = () => {
       label: 'Status',
       sortable: true,
       render: (item) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-          item.is_active
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.is_active
             ? 'bg-emerald-100 text-emerald-700'
             : 'bg-red-100 text-red-700'
-        }`}>
+          }`}>
           {item.is_active ? 'Active' : 'Inactive'}
         </span>
       )
@@ -276,22 +274,20 @@ export const UserManagement: React.FC = () => {
         <div className="flex gap-4">
           <button
             onClick={() => setActiveTab('users')}
-            className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
-              activeTab === 'users'
+            className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${activeTab === 'users'
                 ? 'border-blue-600 text-blue-600 font-medium'
                 : 'border-transparent text-slate-600 hover:text-slate-800'
-            }`}
+              }`}
           >
             <Users className="h-4 w-4" />
             User List
           </button>
           <button
             onClick={() => setActiveTab('monitoring')}
-            className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
-              activeTab === 'monitoring'
+            className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${activeTab === 'monitoring'
                 ? 'border-blue-600 text-blue-600 font-medium'
                 : 'border-transparent text-slate-600 hover:text-slate-800'
-            }`}
+              }`}
           >
             <BarChart3 className="h-4 w-4" />
             Student Monitoring
@@ -310,11 +306,10 @@ export const UserManagement: React.FC = () => {
               <button
                 key={filter.key}
                 onClick={() => setSelectedRole(filter.key)}
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  selectedRole === filter.key
+                className={`px-4 py-2 rounded-lg transition-colors ${selectedRole === filter.key
                     ? 'bg-blue-600 text-white'
                     : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
-                }`}
+                  }`}
               >
                 {filter.label} ({filter.count})
               </button>
@@ -393,7 +388,7 @@ interface CreateUserModalProps {
   onPasswordGenerated: (user: User, password: string) => void;
 }
 
-const CreateUserModal: React.FC<CreateUserModalProps> = ({ onClose, onSuccess, onPasswordGenerated }) => {
+const CreateUserModal: React.FC<CreateUserModalProps> = ({ onClose, onPasswordGenerated }) => {
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState<'admin' | 'student'>('student');
@@ -520,11 +515,10 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ onClose, onSuccess, o
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 outline-none ${
-                  emailError
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 outline-none ${emailError
                     ? 'border-red-300 focus:ring-red-500'
                     : 'border-slate-300 focus:ring-blue-500'
-                }`}
+                  }`}
                 required
               />
             </div>
@@ -626,7 +620,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, onClose, onSuccess 
 
     try {
       console.log('[EditUserModal] Updating user:', user.id);
-      const { data, error } = await supabase.rpc('admin_update_profile', {
+      const { error } = await supabase.rpc('admin_update_profile', {
         target_user_id: user.id,
         new_full_name: fullName,
         new_email: user.email,
