@@ -189,7 +189,7 @@ sudo nginx -t
 sudo systemctl restart nginx
 \`\`\`
 
-### ğŸ›¡ï¸ Langkah Terakhir: Install SSL (HTTPS) Gratis
+### ğŸ›¡EELangkah Terakhir: Install SSL (HTTPS) Gratis
 Agar aman dan API tidak diblokir browser, jalankan certbot:
 \`\`\`bash
 sudo apt install certbot python3-certbot-nginx -y
@@ -197,3 +197,6 @@ sudo certbot --nginx -d pendaftaran.sekolah.com
 \`\`\`
 
 Selesai! Aplikasi Anda kini sudah online, bisa melayani pendaftaran dari siswa, mengirim notifikasi WhatsApp, dan berjalan dengan aman!
+
+
+
