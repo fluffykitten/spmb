@@ -23,6 +23,7 @@ Aplikasi web modern untuk manajemen penerimaan siswa baru (PPDB/SPMB) dengan fit
 - **Form Builder** — Buat dan edit formulir pendaftaran secara dinamis
 - **Exam Builder** — Buat soal ujian (pilihan ganda, essay) dengan pengaturan skor
 - **Token Ujian** — Generate dan kelola token akses ujian
+- **Manajemen Institusi** — Kelola Tahun Ajaran Aktif
 - **Manajemen Batch** — Kelola gelombang pendaftaran
 - **Manajemen Pengguna** — Kelola akun admin dan siswa
 - **Template Dokumen** — Upload dan kelola template DOCX
@@ -60,8 +61,8 @@ Aplikasi web modern untuk manajemen penerimaan siswa baru (PPDB/SPMB) dengan fit
 
 1. **Clone repository**
 ```bash
-git clone https://github.com/salmanm-bibs/spmb2.git
-cd spmb2
+git clone https://github.com/salmanm-bibs/spmb-new.git
+cd spmb-new
 ```
 
 2. **Install dependencies**
@@ -94,16 +95,10 @@ Buat file `.env` (root):
 VITE_API_URL=http://localhost:3001
 ```
 
-5. **Jalankan aplikasi** (buka 2 terminal)
+5. **Jalankan aplikasi** (menggunakan satu terminal saja thanks to `concurrently`)
 
 ```bash
-# Terminal 1 - Backend
-cd server
-node src/index.js
-```
-
-```bash
-# Terminal 2 - Frontend
+# Buka terminal di folder utama project (spmb-new)
 npm run dev
 ```
 
@@ -139,9 +134,9 @@ Import SQL skema ke database.
 #### 3. Clone dan setup
 ```bash
 cd /var/www
-sudo git clone https://github.com/salmanm-bibs/spmb2.git
-sudo chown -R $USER:$USER /var/www/spmb2
-cd spmb2
+sudo git clone https://github.com/salmanm-bibs/spmb-new.git
+sudo chown -R $USER:$USER /var/www/spmb-new
+cd spmb-new
 ```
 
 #### 4. Setup backend
@@ -163,7 +158,7 @@ pm2 save && pm2 startup
 
 #### 5. Build frontend
 ```bash
-cd /var/www/spmb2
+cd /var/www/spmb-new
 nano .env
 # Isi: VITE_API_URL=https://domain-anda.com/api
 npm install
@@ -179,7 +174,7 @@ server {
     listen 80;
     server_name domain-anda.com;
 
-    root /var/www/spmb2/dist;
+    root /var/www/spmb-new/dist;
     index index.html;
     client_max_body_size 50M;
 
@@ -199,7 +194,7 @@ server {
     }
 
     location /uploads/ {
-        alias /var/www/spmb2/server/uploads/;
+        alias /var/www/spmb-new/server/uploads/;
     }
 }
 ```
