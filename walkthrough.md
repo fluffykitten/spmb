@@ -1,202 +1,135 @@
-# Panduan Deployment SPMB-NEW (Local & Production Server)
+# Panduan Menjalankan Aplikasi SPMB (Sistem Penerimaan Murid Baru)
 
-Panduan ini berisi langkah-langkah lengkap untuk menjalankan dan mendeploy aplikasi pendaftaran siswa (SPMB) yang menggunakan Node.js (Express), React (Vite), PostgreSQL, dan Supabase lokal di mesin Anda maupun di Production Server (Linux Ubuntu/Debian).
+Selamat datang! Panduan ini dibuat khusus untuk pemula agar Anda bisa menjalankan aplikasi ini di komputer/laptop Anda sendiri (Windows atau Mac) tanpa perlu keahlian teknis tingkat lanjut. 
 
----
-
-## 捗 1. Menjalankan di Local Environment (Windows/Mac)
-
-### Prasyarat:
-- **Node.js** v18+ 
-- **PostgreSQL** versi 14+ atau yang terbaru
-- Git
-
-### Langkah Instalasi
-1. Clone Repository Anda
-\`\`\`bash
-git clone https://github.com/username-anda/spmb-new.git
-cd spmb-new
-\`\`\`
-
-2. Install Dependencies Frontend & Backend
-\`\`\`bash
-# Di folder utama (Frontend)
-npm install
-
-# Di folder backend
-cd server
-npm install
-cd ..
-\`\`\`
-
-3. Konfigurasi Database Lokal
-- Buka PgAdmin atau command line PostgreSQL, buat database bernama \`spmb\`.
-- Buka folder \`server\` di project dan copy \`src/database_schema.sql\` atau file SQL migrasi yang Anda punya, lalu jalankan ke dalam database \`spmb\`.
-- Buat file bernama \`.env\` di dalam folder \`server/\` dan isi:
-\`\`\`env
-DATABASE_URL=postgresql://postgres:admin@127.0.0.1:5432/spmb
-JWT_SECRET=rahasia-jangan-disebar-2026
-PORT=3001
-UPLOAD_DIR=./uploads
-\`\`\`
-*(Catatan: Sesuaikan \`postgres:admin\` dengan username dan password PostgreSQL Anda).*
-
-4. Jalankan Aplikasi
-Buka **dua** terminal secara terpisah:
-
-**Terminal 1 (Backend):**
-\`\`\`bash
-cd server
-node src/index.js
-\`\`\`
-
-**Terminal 2 (Frontend):**
-\`\`\`bash
-npm run dev
-\`\`\`
-Aplikasi akan bisa diakses dari \`http://localhost:5173\`.
+Ikuti panduan ini langkah demi langkah dengan perlahan.
 
 ---
 
-## 倹 2. Deployment ke Production Server (Linux / VPS)
-*Berikut adalah cara untuk menghosting aplikasi agar bisa diakses public di server Ubuntu.*
+## Tahap 1: Persiapan Aplikasi yang Dibutuhkan Terlebih Dahulu
 
-### Prasyarat Server (VPS):
-- Ubuntu 20.04 / 22.04 LTS
-- Sudah punya koneksi SSH ke server
-- Domain (misal: pendaftaran.sekolah.com) yang sudah diarahkan (A-Record) ke IP VPS.
+Sebelum kita mulai, pastikan komputer Anda sudah memiliki 3 aplikasi wajib ini. Jika belum ada, silakan download dan instal dulu:
 
-### Langkah 1: Install Alat yang Dibutuhkan
-Login ke server via SSH:
-\`\`\`bash
-sudo apt update && sudo apt upgrade -y
-# Install Nginx dan PostgreSQL
-sudo apt install nginx postgresql postgresql-contrib git curl -y
+1. **Node.js (Versi 18 atau lebih baru)**
+   * **Fungsi:** Aplikasi ini butuh Node.js untuk bisa berjalan.
+   * **Cara Instal:** Buka website [nodejs.org](https://nodejs.org/), download versi "LTS" (Recommended for Most Users), lalu *next-next* saja sampai selesai seperti menginstal aplikasi biasa.
+2. **PostgreSQL (Versi 14 atau lebih baru)**
+   * **Fungsi:** Ini adalah aplikasi "database" untuk menyimpan semua data (akun pendaftar, nilai ujian, pengaturan, dll).
+   * **Cara Instal:** Buka website [postgresql.org/download](https://www.postgresql.org/download/), pilih sistem operasi Anda (Windows/Mac).
+   * **笞・・SANGAT PENTING SAAT INSTALASI PostgreSQL:** Nanti Anda akan diminta membuat password untuk user bernama `postgres`. **Ingat baik-baik password ini!** Jangan sampai lupa, misalnya buat password `admin` atau `rahasia123` yang mudah Anda ingat.
+3. **Git**
+   * **Fungsi:** Untuk mengambil kode (meng-clone) aplikasi ini dari internet ke komputer Anda.
+   * **Cara Instal:** Buka [git-scm.com/downloads](https://git-scm.com/downloads) dan instal.
 
-# Install Node.js v18 (Atau versi 20)
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt install nodejs -y
+---
 
-# Install PM2 (Untuk menjaga backend tetap nyala)
-sudo npm install -g pm2
-\`\`\`
+## Tahap 2: Mengambil Kode Aplikasi (Clone)
 
-### Langkah 2: Setup Database di Server 
-Buat pengguna dan database untuk aplikasi:
-\`\`\`bash
-sudo -u postgres psql
+Sekarang kita akan mengambil aplikasinya.
 
-# Di dalam prompt postgres (tanda =#):
-CREATE DATABASE spmb;
-CREATE USER admin_spmb WITH ENCRYPTED PASSWORD 'PasswordSuperKuat123';
-GRANT ALL PRIVILEGES ON DATABASE spmb TO admin_spmb;
-\q
-\`\`\`
-*(Setelah ini, restore file SQL Skema database yang digunakan ke VPS Anda).*
+1. Buka aplikasi **Terminal** (di Mac) atau **Command Prompt / PowerShell** (di Windows).
+2. Ketik perintah ini persis seperti di bawah, lalu tekan Enter:
+   ```bash
+   git clone https://github.com/salmanm-bibs/spmb-new.git
+   ```
+   *(Ini akan mendownload folder aplikasi bernama "spmb-new" ke komputer Anda)*
+3. Masuk ke dalam folder aplikasi tersebut dengan perintah:
+   ```bash
+   cd spmb-new
+   ```
 
-### Langkah 3: Clone Code Server
-Masuk ke `/var/www/` dan pull aplikasi Anda:
-\`\`\`bash
-cd /var/www
-sudo git clone https://github.com/username-anda/spmb-new.git
-sudo chown -R $USER:$USER /var/www/spmb-new
-cd spmb-new
-\`\`\`
+---
 
-### Langkah 4: Setup Backend (Express API)
-\`\`\`bash
-cd server
-npm install
+## Tahap 3: Mengunduh Isi/Komponen Aplikasi (Install Dependencies)
 
-# Buat file .env production
-nano .env 
-\`\`\`
-Isi `server/.env` dengan:
-\`\`\`env
-DATABASE_URL=postgresql://admin_spmb:PasswordSuperKuat123@127.0.0.1:5432/spmb
-JWT_SECRET=rahasia-production-key-xxx
-PORT=3001
-UPLOAD_DIR=./uploads
-\`\`\`
+Aplikasi ini ibarat rumah yang butuh banyak perabotan. Kita harus mendownload "perabotan" tersebut.
 
-**Jalankan dengan PM2:**
-\`\`\`bash
-pm2 start src/index.js --name "spmb-backend"
-pm2 save
-pm2 startup
-\`\`\`
-Backend Anda sekarang sudah jalan selamanya di port `3001`.
+1. Pastikan Anda masih berada di dalam folder `spmb-new` di Terminal.
+2. Ketik perintah ini dan tekan Enter:
+   ```bash
+   npm install
+   ```
+   *(Biarkan proses berjalan sampai selesai, biasanya memakan waktu beberapa menit. Akan ada banyak tampilan loading, itu normal).*
+3. Setelah selesai, sekarang kita masuk ke ruang mesin (folder aplikasi backend/server) dengan mengetik:
+   ```bash
+   cd server
+   ```
+4. Di dalam folder `server` ini, ketik lagi perintah yang sama untuk mendownload sisa "perabotan" mesin:
+   ```bash
+   npm install
+   ```
+   *(Biarkan proses selesai lagi).*
 
-### Langkah 5: Setup Frontend (React/Vite)
-Kompilasi Frontend menjadi HTML statis untuk di hosting Nginx:
-\`\`\`bash
-cd /var/www/spmb-new
+---
 
-# Ubah url backend di env frontend bila perlu
-nano .env
-# Isi: VITE_API_URL=https://pendaftaran.sekolah.com/api
+## Tahap 4: Menyiapkan Kamar Kosong untuk Database Anda
 
-npm install
-npm run build
-\`\`\`
-Aplikasi siap untuk disajikan dari folder `dist/`.
+Aplikasi butuh **wadah database kosong** di PostgreSQL Anda sebelum dia bisa mulai menyimpan data siswa/pendaftar.
 
-### Langkah 6: Konfigurasi Nginx & Domain
-Buat file konfigurasi Nginx untuk domain Anda:
-\`\`\`bash
-sudo nano /etc/nginx/sites-available/spmb
-\`\`\`
+1. Buka aplikasi **pgAdmin 4** (Biasanya akan otomatis terinstal saat Anda menginstal PostgreSQL).
+2. Aplikasi pgAdmin akan meminta password. Masukkan password PostgreSQL Anda yang tadi Anda ingat-ingat.
+3. Di menu sebelah kiri, cari menu **Databases**.
+4. Klik Kanan pada tulisan **Databases**, lalu pilih **Create -> Database...**
+5. Di kolom *Database*, ketik persis seperti ini: `spmb` (tulisan huruf kecil semua).
+6. Simpan (Save). 
+*Tutup pgAdmin, persiapan wadah penyimpan data sudah selesai! Jangan diisi apa-apa dulu, biarkan aplikasi yang akan mengisinya secara otomatis.*
 
-Isi dengan konfigurasi Reverse-Proxy ini:
-\`\`\`nginx
-server {
-    listen 80;
-    server_name pendaftaran.sekolah.com; # Ganti Domain Anda
+---
 
-    root /var/www/spmb-new/dist;
-    index index.html index.htm;
-    client_max_body_size 50M;
+## Tahap 5: Menyambungkan Aplikasi dengan Database (Konfigurasi .env)
 
-    # Frontend Routing (React)
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
+Aplikasi harus tahu **apa** password database Anda (yang dibuat di Tahap 1) dan **di mana** database Anda agar mereka bisa terhubung.
 
-    # Backend / API Proxy (Node.js)
-    location /api/ {
-        proxy_pass http://localhost:3001;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
+1. Buka folder `spmb-new` yang sudah Anda download, lalu buka file `server/.env`.
+2. Jika file `.env` belum ada, buat sebuah file baru bernama **persis** `.env` (Ingat, ada titik di depannya. Tidak bernama ".env.txt").
+3. Isi file `.env` tersebut dengan teks ini:
+   ```env
+   DATABASE_URL=postgresql://postgres:MASUKKAN_PASSWORD_ANDA_DISINI@127.0.0.1:5432/spmb
+   JWT_SECRET=rahasia-jangan-disebar-2026
+   PORT=3001
+   UPLOAD_DIR=./uploads
+   ```
+   **笞・・PENTING!** Coba perhatikan tulisan `MASUKKAN_PASSWORD_ANDA_DISINI`. Hapus tulisan tersebut, lalu **ganti dengan password PostgreSQL Anda yang asli (dari Tahap 1)**.
+   *(Contoh: Jika password Anda adalah "admin", maka pastikan URL-nya menjadi `postgresql://postgres:admin@127...`)*
+   Simpan file tersebut!
+4. Berikutnya, kembali ke folder utama `spmb-new` (mundur satu folder dari `server`). 
+5. Di sana, buka (atau buat jika belum ada) file `.env` satu lagi. Isi file `.env` ini cukup satu baris saja:
+   ```env
+   VITE_API_URL=http://localhost:3001
+   ```
+   Simpan!
 
-    # Uploaded Files Proxy
-    location /uploads/ {
-        alias /var/www/spmb-new/server/uploads/;
-        access_log off;
-    }
-}
-\`\`\`
+---
 
-Simpan lalu aktifkan:
-\`\`\`bash
-sudo ln -s /etc/nginx/sites-available/spmb /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl restart nginx
-\`\`\`
+## Tahap 6: Membuat Tabel Pengguna Otomatis (Init Database)
 
-### 孱・・Langkah Terakhir: Install SSL (HTTPS) Gratis
-Agar aman dan API tidak diblokir browser, jalankan certbot:
-\`\`\`bash
-sudo apt install certbot python3-certbot-nginx -y
-sudo certbot --nginx -d pendaftaran.sekolah.com
-\`\`\`
+Kita sudah punya database `spmb` yang *kosong*, sekarang aplikasi akan otomatis membangun semua laci/tabel untuknya.
 
-Selesai! Aplikasi Anda kini sudah online, bisa melayani pendaftaran dari siswa, mengirim notifikasi WhatsApp, dan berjalan dengan aman!
+1. Di aplikasi Terminal / Command Prompt Anda, masuk ke dalam folder `server` dengan perintah:
+   ```bash
+   cd server
+   ```
+2. Jalankan perintah ajaib ini:
+   ```bash
+   npm run init-db
+   ```
+3. Jika berhasil, akan ada pesan *Database schema created successfully* di layar Anda.
 
+---
 
+## Tahap Terakhir: Menyalakan Aplikasinya! 脂
+
+Sekarang semua sudah siap dan Anda tinggal menikmati hasilnya.
+
+1. Di aplikasi Terminal / Command Prompt Anda, kembali ke **folder utama** project (`spmb-new`). Coba ketik `cd ..` untuk mundur dari folder server.
+2. Ketika Anda yakin sudah di folder `spmb-new`, jalankan satu perintah terakhir ini:
+   ```bash
+   npm run dev
+   ```
+3. Selesai! Aplikasi perlahan-lahan menyala...
+4. Buka Browser Anda (Google Chrome / Mozilla Firefox / Safari).
+5. Ketik alamat ini di tab baru:
+   **`http://localhost:5173`**
+
+Selamat! Halaman pendaftaran dan Admin aplikasi Anda sudah terbuka dan siap digunakan secara lokal! Jika nanti Anda sudah selesai dan ingin mematikan aplikasinya, cukup tekan tombol `Ctrl + C` di jendela Terminal tadi.
 
