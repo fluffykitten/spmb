@@ -58,15 +58,7 @@ export const ExamGrading: React.FC<ExamGradingProps> = ({ examId }) => {
 
       let query = supabase
         .from('exam_attempts')
-        .select(`
-          *,
-          applicant:applicants!inner(
-            dynamic_data,
-            user_id,
-            registration_number
-          ),
-          exam:exams!inner(title)
-        `)
+        .select('*')
         .eq('status', 'completed')
         .order('submitted_at', { ascending: false });
 
@@ -74,12 +66,27 @@ export const ExamGrading: React.FC<ExamGradingProps> = ({ examId }) => {
         query = query.eq('exam_id', examId);
       }
 
-      const { data: attemptsData, error: attemptsError } = await query;
-
+      const { data: rawAttempts, error: attemptsError } = await query;
       if (attemptsError) throw attemptsError;
-      console.log('[ExamGrading] Fetched attempts:', attemptsData?.length);
 
-      if (attemptsData && attemptsData.length > 0) {
+      let attemptsData: any[] = [];
+      if (rawAttempts && rawAttempts.length > 0) {
+        const examIds = [...new Set(rawAttempts.map(a => a.exam_id))];
+        const applicantIds = [...new Set(rawAttempts.map(a => a.applicant_id))];
+
+        const { data: examsData } = await supabase.from('exams').select('id, title').in('id', examIds);
+        const { data: applicantsData } = await supabase.from('applicants').select('id, dynamic_data, user_id, registration_number').in('id', applicantIds);
+
+        attemptsData = rawAttempts.map(a => ({
+          ...a,
+          exam: examsData?.find(e => e.id === a.exam_id) || { title: 'Unknown Exam' },
+          applicant: applicantsData?.find(app => app.id === a.applicant_id) || { dynamic_data: {}, registration_number: '-' }
+        }));
+      }
+
+      console.log('[ExamGrading] Fetched attempts:', attemptsData.length);
+
+      if (attemptsData.length > 0) {
         setAttempts(attemptsData);
 
         const { data: resultsData, error: resultsError } = await supabase
@@ -359,33 +366,51 @@ const GradingDetail: React.FC<GradingDetailProps> = ({ attemptId, onBack }) => {
       setLoading(true);
       console.log('[GradingDetail] Loading attempt:', attemptId);
 
-      const { data: attemptData, error: attemptError } = await supabase
+      const { data: attemptRaw, error: attemptError } = await supabase
         .from('exam_attempts')
-        .select(`
-          *,
-          applicant:applicants!inner(
-            dynamic_data,
-            user_id,
-            registration_number
-          ),
-          exam:exams!inner(title, passing_score)
-        `)
+        .select('*')
         .eq('id', attemptId)
         .single();
 
-      if (attemptError) throw attemptError;
+      if (attemptError || !attemptRaw) throw attemptError;
+
+      const { data: applicantRaw } = await supabase.from('applicants').select('dynamic_data, user_id, registration_number').eq('id', attemptRaw.applicant_id).single();
+      const { data: examRaw } = await supabase.from('exams').select('title, passing_score').eq('id', attemptRaw.exam_id).single();
+
+      const attemptData = {
+        ...attemptRaw,
+        applicant: applicantRaw || { dynamic_data: {}, registration_number: '-' },
+        exam: examRaw || { title: 'Unknown Exam', passing_score: 0 }
+      };
+
       setAttempt(attemptData);
 
-      const { data: answersData, error: answersError } = await supabase
+      const { data: answersRaw, error: answersError } = await supabase
         .from('exam_answers')
-        .select(`
-          *,
-          question:exam_questions!inner(*),
-          selected_option:exam_question_options(*)
-        `)
+        .select('*')
         .eq('attempt_id', attemptId);
 
       if (answersError) throw answersError;
+
+      let answersData: any[] = [];
+      if (answersRaw && answersRaw.length > 0) {
+        const questionIds = [...new Set(answersRaw.map(a => a.question_id))];
+        const { data: questions } = await supabase.from('exam_questions').select('*').in('id', questionIds);
+
+        const optionIds = [...new Set(answersRaw.map(a => a.selected_option_id).filter(Boolean))];
+        let options: any[] = [];
+        if (optionIds.length > 0) {
+          const { data: opts } = await supabase.from('exam_question_options').select('*').in('id', optionIds);
+          options = opts || [];
+        }
+
+        answersData = answersRaw.map(a => ({
+          ...a,
+          question: questions?.find(q => q.id === a.question_id) || { id: a.question_id },
+          selected_option: a.selected_option_id ? options.find(o => o.id === a.selected_option_id) : null
+        }));
+      }
+
       console.log('[GradingDetail] Loaded answers:', answersData?.length);
       setAnswers(answersData || []);
 

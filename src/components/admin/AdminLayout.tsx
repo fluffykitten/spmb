@@ -19,7 +19,8 @@ import {
   Waves,
   FileText,
   Settings,
-  Menu
+  Menu,
+  Activity
 } from 'lucide-react';
 
 export const AdminLayout: React.FC = () => {
@@ -34,18 +35,28 @@ export const AdminLayout: React.FC = () => {
   };
 
   const menuItems = [
+    { label: 'UTAMA', type: 'header' },
     { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
     { icon: Users, label: 'Siswa', path: '/admin/students' },
-    { icon: Waves, label: 'Gelombang Pendaftaran', path: '/admin/batches' },
-    { icon: Calendar, label: 'Interview', path: '/admin/interviews' },
+    { icon: Activity, label: 'Student Monitoring', path: '/admin/student-monitoring' },
+
+    { label: 'SELEKSI & UJIAN', type: 'header' },
+    { icon: Calendar, label: 'Pengajuan Interview', path: '/admin/interviews' },
+    { icon: Users, label: 'Daftar Wawancara', path: '/admin/interview-list' },
+    { icon: ClipboardList, label: 'Kriteria Wawancara', path: '/admin/interview-criteria' },
     { icon: ClipboardList, label: 'Exam Builder', path: '/admin/exams' },
     { icon: Ticket, label: 'Exam Tokens', path: '/admin/exam-tokens' },
-    { icon: FolderOpen, label: 'Dokumen', path: '/admin/documents' },
+
+    { label: 'DOKUMEN & KOMUNIKASI', type: 'header' },
+    { icon: FolderOpen, label: 'Akses Dokumen', path: '/admin/documents' },
     { icon: FileText, label: 'Template Surat', path: '/admin/templates' },
     { icon: FileArchive, label: 'Template DOCX', path: '/admin/docx-templates' },
     { icon: FileCode, label: 'Form Builder', path: '/admin/form-builder' },
     { icon: MessageSquare, label: 'WhatsApp', path: '/admin/whatsapp' },
+
+    { label: 'PENGATURAN', type: 'header' },
     { icon: UserCog, label: 'User Management', path: '/admin/users' },
+    { icon: Waves, label: 'Gelombang Pendaftaran', path: '/admin/batches' },
     { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
     { icon: Settings, label: 'Konfigurasi', path: '/admin/settings' },
     { icon: Database, label: 'Database Backup', path: '/admin/backup' },
@@ -71,22 +82,30 @@ export const AdminLayout: React.FC = () => {
             </div>
           </div>
 
-          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
+          <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+            {menuItems.map((item, idx) => {
+              if (item.type === 'header') {
+                return (
+                  <div key={`header-${idx}`} className="px-3 pt-4 pb-2 text-xs font-bold text-slate-400">
+                    {item.label}
+                  </div>
+                );
+              }
+
+              const Icon = item.icon!;
               const isActive = location.pathname === item.path;
               return (
                 <Link
                   key={item.path}
-                  to={item.path}
+                  to={item.path!}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isActive
                     ? 'bg-blue-50 text-blue-600'
                     : 'text-slate-600 hover:bg-slate-50'
                     }`}
                 >
                   <Icon className="h-5 w-5" />
-                  <span className="font-medium">{item.label}</span>
+                  <span className="font-medium text-sm">{item.label}</span>
                 </Link>
               );
             })}

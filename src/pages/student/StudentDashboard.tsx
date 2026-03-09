@@ -122,28 +122,39 @@ export const StudentDashboard: React.FC = () => {
 
         const { data: attemptsData } = await (supabase
           .from('exam_attempts')
-          .select('id')
+          .select('id, exam_id, attempt_number, submitted_at')
           .eq('applicant_id', appData.id)
           .eq('status', 'completed') as any);
 
         if (attemptsData && attemptsData.length > 0) {
+          const attemptIds = attemptsData.map((a: any) => a.id);
+          const examIds = Array.from(new Set(attemptsData.map((a: any) => a.exam_id)));
+
+          const { data: examsData } = await (supabase
+            .from('exams')
+            .select('id, title, passing_score')
+            .in('id', examIds) as any);
+
           const { data: resultsData } = await (supabase
             .from('exam_results')
-            .select(`
-              *,
-              attempt:exam_attempts!inner(
-                exam_id,
-                attempt_number,
-                submitted_at,
-                exam:exams!inner(title, passing_score)
-              )
-            `)
-            .in('attempt_id', attemptsData.map((a: any) => a.id))
+            .select('*')
+            .in('attempt_id', attemptIds)
             .order('created_at', { ascending: false }) as any);
 
           if (resultsData) {
-            console.log('[StudentDashboard] Loaded exam results:', resultsData.length);
-            setExamResults(resultsData);
+            const enrichedResults = resultsData.map((result: any) => {
+              const attempt = attemptsData.find((a: any) => a.id === result.attempt_id);
+              if (attempt) {
+                const exam = examsData?.find((e: any) => e.id === attempt.exam_id);
+                attempt.exam = exam || { title: 'Unknown Exam', passing_score: 0 };
+              }
+              return {
+                ...result,
+                attempt
+              };
+            });
+            console.log('[StudentDashboard] Loaded exam results:', enrichedResults.length);
+            setExamResults(enrichedResults);
           }
         } else {
           setExamResults([]);

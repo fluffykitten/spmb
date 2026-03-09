@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { Calendar, Clock, MapPin, Video, CheckCircle, XCircle, Edit2, User, AlertTriangle, RefreshCw, Mail, Send, ChevronDown, ChevronUp } from 'lucide-react';
+import { Calendar, Clock, MapPin, Video, CheckCircle, XCircle, Edit2, User, AlertTriangle, RefreshCw, Mail, Send, ChevronDown, ChevronUp, ClipboardList } from 'lucide-react';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
 import { sendWhatsAppNotification } from '../../lib/whatsappNotification';
@@ -53,6 +54,7 @@ interface EmailLog {
 }
 
 export const InterviewManagement: React.FC = () => {
+  const navigate = useNavigate();
   const [requests, setRequests] = useState<InterviewRequest[]>([]);
   const [interviewers, setInterviewers] = useState<Interviewer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -210,17 +212,19 @@ export const InterviewManagement: React.FC = () => {
     setResendingEmail(prev => ({ ...prev, [request.id]: true }));
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      const token = localStorage.getItem('auth_token');
+      const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+      if (!token) {
         throw new Error('Not authenticated');
       }
 
       const emailResponse = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-interview-notification`,
+        `${apiBase}/api/wawancara/notify-interviewer`,
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${session.access_token}`,
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
@@ -312,14 +316,23 @@ export const InterviewManagement: React.FC = () => {
           <h2 className="text-2xl font-bold text-slate-800">Interview Management</h2>
           <p className="text-slate-600 mt-1">Review dan kelola permintaan interview dari siswa</p>
         </div>
-        <button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
-        >
-          <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-          {refreshing ? 'Refreshing...' : 'Refresh'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate('/admin/interview-session/new')}
+            className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+          >
+            <ClipboardList className="h-4 w-4" />
+            Mulai Wawancara Baru
+          </button>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-2 flex-wrap">
@@ -334,11 +347,10 @@ export const InterviewManagement: React.FC = () => {
           <button
             key={key}
             onClick={() => setFilterStatus(key)}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              filterStatus === key
-                ? 'bg-blue-600 text-white'
-                : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
-            }`}
+            className={`px-4 py-2 rounded-lg transition-colors ${filterStatus === key
+              ? 'bg-blue-600 text-white'
+              : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
+              }`}
           >
             {label}
             <span className="ml-2 font-semibold">
@@ -484,9 +496,8 @@ export const InterviewManagement: React.FC = () => {
                                   ) : (
                                     <XCircle className="h-4 w-4 text-red-600" />
                                   )}
-                                  <span className={`text-xs font-medium uppercase ${
-                                    log.status === 'sent' ? 'text-emerald-700' : 'text-red-700'
-                                  }`}>
+                                  <span className={`text-xs font-medium uppercase ${log.status === 'sent' ? 'text-emerald-700' : 'text-red-700'
+                                    }`}>
                                     {log.status}
                                   </span>
                                 </div>
@@ -527,6 +538,18 @@ export const InterviewManagement: React.FC = () => {
                     className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     Review Permintaan
+                  </button>
+                </div>
+              )}
+
+              {(request.status === 'approved' || request.status === 'completed') && (
+                <div className="flex gap-2 pt-4 border-t border-slate-200">
+                  <button
+                    onClick={() => navigate('/admin/interview-session/new')}
+                    className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+                  >
+                    <ClipboardList className="h-4 w-4" />
+                    Mulai Sesi Wawancara
                   </button>
                 </div>
               )}
@@ -577,7 +600,6 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ request, interviewers, onRefr
   const [checkingConflict, setCheckingConflict] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loadingInterviewers, setLoadingInterviewers] = useState(false);
-  const [emailStatus, setEmailStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: '' });
 
   useEffect(() => {
     if (action === 'approve') {
@@ -688,49 +710,33 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ request, interviewers, onRefr
 
       if (error) throw error;
 
-      if (action === 'approve' && formData.send_email) {
+      if (action === 'approve') {
+        // Auto-create wawancara interview record
         try {
-          const selectedInterviewer = interviewers.find(i => i.id === formData.interviewer_id);
-          if (selectedInterviewer) {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-              const emailResponse = await fetch(
-                `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-interview-notification`,
-                {
-                  method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${session.access_token}`,
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    interview_request_id: request.id,
-                    interviewer_id: formData.interviewer_id,
-                    interviewer_email: selectedInterviewer.email,
-                    interviewer_name: selectedInterviewer.full_name,
-                    student_name: getApplicantName(request.applicant),
-                    registration_number: request.applicant.registration_number,
-                    interview_date: format(new Date(request.proposed_date), 'EEEE, dd MMMM yyyy', { locale: localeId }),
-                    interview_time: `${request.proposed_time_start.substring(0, 5)} - ${request.proposed_time_end.substring(0, 5)}`,
-                    interview_type: request.proposed_type === 'online' ? 'Online' : 'Offline',
-                    meeting_link: formData.meeting_link || undefined,
-                    admin_notes: formData.admin_notes || undefined,
-                  }),
-                }
-              );
-
-              const emailResult = await emailResponse.json();
-              if (emailResult.success) {
-                setEmailStatus({ type: 'success', message: 'Email notifikasi berhasil dikirim ke interviewer!' });
-              } else {
-                setEmailStatus({ type: 'error', message: 'Interview berhasil disetujui, tetapi email gagal dikirim.' });
-              }
-            }
+          const token = localStorage.getItem('auth_token');
+          const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+          const wawancaraRes = await fetch(`${apiBase}/api/wawancara/interviews/from-request`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              applicant_id: request.applicant_id,
+              interview_request_id: request.id
+            })
+          });
+          const wawancaraResult = await wawancaraRes.json();
+          if (wawancaraResult.error) {
+            console.error('Failed to create wawancara record:', wawancaraResult.error);
+          } else {
+            console.log('[InterviewManagement] Wawancara record created:', wawancaraResult.data?.id);
           }
-        } catch (emailError) {
-          console.error('Error sending email:', emailError);
-          setEmailStatus({ type: 'error', message: 'Interview berhasil disetujui, tetapi email gagal dikirim.' });
+        } catch (wawancaraError) {
+          console.error('Error creating wawancara record:', wawancaraError);
         }
 
+        // Send WhatsApp notification
         try {
           const phoneNumber = getFieldValue(request.applicant.dynamic_data, FIELD_NAMES.NO_TELEPON);
           const studentName = getApplicantName(request.applicant);
@@ -744,7 +750,20 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ request, interviewers, onRefr
             if (request.proposed_type === 'online' && formData.meeting_link) {
               meetingDetails = `Link Meeting: ${formData.meeting_link}`;
             } else if (request.proposed_type === 'offline') {
-              meetingDetails = 'Lokasi wawancara akan dikonfirmasi lebih lanjut.';
+              let schoolAddress = 'Alamat Sekolah';
+              try {
+                const { data: configData } = await supabase
+                  .from('app_config')
+                  .select('value')
+                  .eq('key', 'school_address')
+                  .single();
+                if (configData && configData.value) {
+                  schoolAddress = configData.value;
+                }
+              } catch (e) {
+                console.error('Gagal mengambil alamat sekolah', e);
+              }
+              meetingDetails = `Lokasi: ${schoolAddress}`;
             }
 
             await sendWhatsAppNotification({
@@ -764,9 +783,48 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ request, interviewers, onRefr
         } catch (whatsappError) {
           console.error('Error sending WhatsApp notification:', whatsappError);
         }
+
+        // Send email and WA notification to interviewer
+        const selectedInterviewer = interviewers.find(i => i.id === formData.interviewer_id);
+        if (selectedInterviewer) {
+          try {
+            const token = localStorage.getItem('auth_token');
+            const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+            if (token) {
+              const studentName = getApplicantName(request.applicant);
+              await fetch(
+                `${apiBase}/api/wawancara/notify-interviewer`,
+                {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    interview_request_id: request.id,
+                    interviewer_id: selectedInterviewer.id,
+                    interviewer_email: selectedInterviewer.email,
+                    interviewer_name: selectedInterviewer.full_name,
+                    student_name: studentName,
+                    registration_number: request.applicant.registration_number,
+                    interview_date: format(new Date(request.proposed_date), 'EEEE, dd MMMM yyyy', { locale: localeId }),
+                    interview_time: `${request.proposed_time_start.substring(0, 5)} - ${request.proposed_time_end.substring(0, 5)}`,
+                    interview_type: request.proposed_type === 'online' ? 'Online' : 'Offline',
+                    meeting_link: formData.meeting_link || undefined,
+                    admin_notes: formData.admin_notes || undefined,
+                  }),
+                }
+              );
+              console.log('[InterviewManagement] Notified interviewer via Express API');
+            }
+          } catch (interviewerNotifyError) {
+            console.error('Error notifying interviewer:', interviewerNotifyError);
+          }
+        }
       }
 
-      alert('Berhasil!' + (emailStatus.message ? '\n' + emailStatus.message : ''));
+      alert('Berhasil memproses permintaan!');
       onSuccess();
     } catch (error) {
       console.error('Error:', error);

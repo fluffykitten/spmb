@@ -9,6 +9,7 @@ import { StudentLayout } from './components/student/StudentLayout';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { StudentManagement } from './pages/admin/StudentManagement';
 import { UserManagement } from './pages/admin/UserManagement';
+import { StudentMonitoring } from './pages/admin/StudentMonitoring';
 import { LetterTemplates } from './pages/admin/LetterTemplates';
 import { ApplicantDocuments } from './pages/admin/ApplicantDocuments';
 import { Configuration } from './pages/admin/Configuration';
@@ -21,6 +22,10 @@ import { DocxTemplateManagement } from './pages/admin/DocxTemplateManagement';
 import { WhatsAppManagement } from './pages/admin/WhatsAppManagement';
 import { RegistrationBatchManagement } from './pages/admin/RegistrationBatchManagement';
 import DatabaseBackup from './pages/admin/DatabaseBackup';
+import InterviewCriteriaSettings from './pages/admin/InterviewCriteriaSettings';
+import InterviewSessionPage from './pages/admin/InterviewSessionPage';
+import InterviewReportPage from './pages/admin/InterviewReportPage';
+import InterviewListPage from './pages/admin/InterviewListPage';
 import { StudentDashboard } from './pages/student/StudentDashboard';
 import { ApplicationForm } from './pages/student/ApplicationForm';
 import GenerateDocuments from './pages/student/GenerateDocuments';
@@ -56,9 +61,15 @@ function App() {
             <Route path="whatsapp" element={<WhatsAppManagement />} />
             <Route path="batches" element={<RegistrationBatchManagement />} />
             <Route path="users" element={<UserManagement />} />
+            <Route path="student-monitoring" element={<StudentMonitoring />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="settings" element={<Configuration />} />
             <Route path="backup" element={<DatabaseBackup />} />
+            <Route path="interview-criteria" element={<InterviewCriteriaSettings />} />
+            <Route path="interview-list" element={<InterviewListPage />} />
+            <Route path="interview-session/new" element={<InterviewSessionPage />} />
+            <Route path="interview-session/:id" element={<InterviewSessionPage />} />
+            <Route path="interview-session/:id/report" element={<InterviewReportPage />} />
             <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
           </Route>
 

@@ -18,12 +18,13 @@ export async function sendWhatsAppNotification(params: SendNotificationParams): 
       return { success: false, error: 'No active session' };
     }
 
-    const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-whatsapp-notification`;
+    const token = localStorage.getItem('auth_token') || localStorage.getItem('token') || session.access_token;
+    const apiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/whatsapp/send`;
 
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${session.access_token}`,
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(params),
@@ -53,18 +54,16 @@ export async function sendExamSubmittedNotification(attemptId: string): Promise<
 
     const { data: attempt, error: attemptError } = await supabase
       .from('exam_attempts')
-      .select(`
-        *,
-        exam:exams!inner(title),
-        applicant:applicants!inner(
-          id,
-          dynamic_data,
-          registration_number,
-          user_id
-        )
-      `)
+      .select('*')
       .eq('id', attemptId)
       .single();
+
+    if (!attemptError && attempt) {
+      const { data: examData } = await supabase.from('exams').select('title').eq('id', attempt.exam_id).single();
+      const { data: applicantData } = await supabase.from('applicants').select('id, dynamic_data, registration_number, user_id').eq('id', attempt.applicant_id).single();
+      attempt.exam = examData || { title: 'Unknown Exam' };
+      attempt.applicant = applicantData || {};
+    }
 
     if (attemptError || !attempt) {
       console.error('[ExamNotification] Failed to fetch attempt:', attemptError);
@@ -113,18 +112,16 @@ export async function sendExamGradedNotification(attemptId: string): Promise<{ s
 
     const { data: attempt, error: attemptError } = await supabase
       .from('exam_attempts')
-      .select(`
-        *,
-        exam:exams!inner(title),
-        applicant:applicants!inner(
-          id,
-          dynamic_data,
-          registration_number,
-          user_id
-        )
-      `)
+      .select('*')
       .eq('id', attemptId)
       .single();
+
+    if (!attemptError && attempt) {
+      const { data: examData } = await supabase.from('exams').select('title').eq('id', attempt.exam_id).single();
+      const { data: applicantData } = await supabase.from('applicants').select('id, dynamic_data, registration_number, user_id').eq('id', attempt.applicant_id).single();
+      attempt.exam = examData || { title: 'Unknown Exam' };
+      attempt.applicant = applicantData || {};
+    }
 
     if (attemptError || !attempt) {
       console.error('[ExamNotification] Failed to fetch attempt:', attemptError);

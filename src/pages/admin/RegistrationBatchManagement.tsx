@@ -602,7 +602,7 @@ export const RegistrationBatchManagement: React.FC = () => {
                     <span className="text-xs font-medium text-slate-600">Total Biaya</span>
                   </div>
                   <p className="text-sm font-semibold text-slate-900">
-                    {formatCurrency(batch.entrance_fee_amount + batch.administration_fee_amount)}
+                    {formatCurrency(Number(batch.entrance_fee_amount) + Number(batch.administration_fee_amount))}
                   </p>
                   <p className="text-xs text-slate-600 mt-1">
                     Masuk: {formatCurrency(batch.entrance_fee_amount)} • Admin: {formatCurrency(batch.administration_fee_amount)}

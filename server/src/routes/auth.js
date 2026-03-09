@@ -133,6 +133,66 @@ router.post('/register', async (req, res) => {
     }
 });
 
+// POST /api/auth/admin-create-user (Admins only)
+router.post('/admin-create-user', authenticateToken, async (req, res) => {
+    const client = await pool.connect();
+    try {
+        // Verify admin
+        const { rows: reqUserProfiles } = await client.query(
+            "SELECT role FROM profiles WHERE user_id = $1", [req.user.userId]
+        );
+        if (!reqUserProfiles.length || reqUserProfiles[0].role !== 'admin') {
+            return res.status(403).json({ error: 'Only admins can perform this action' });
+        }
+
+        const { email, password, full_name, role, phone } = req.body;
+
+        if (!email || !password || !full_name) {
+            return res.status(400).json({ error: 'Email, password, and full name are required' });
+        }
+
+        const { rows: existing } = await client.query(
+            'SELECT id FROM users WHERE email = $1',
+            [email.toLowerCase()]
+        );
+
+        if (existing.length > 0) {
+            return res.status(409).json({ error: 'A user with this email already exists' });
+        }
+
+        await client.query('BEGIN');
+        const passwordHash = await bcrypt.hash(password, 10);
+
+        const { rows: newUsers } = await client.query(
+            'INSERT INTO users (email, password_hash, full_name) VALUES ($1, $2, $3) RETURNING *',
+            [email.toLowerCase(), passwordHash, full_name]
+        );
+        const newUser = newUsers[0];
+
+        await client.query(
+            `INSERT INTO profiles (user_id, role, full_name, email, phone_number) 
+             VALUES ($1, $2, $3, $4, $5)`,
+            [newUser.id, role || 'student', full_name, email.toLowerCase(), phone || null]
+        );
+
+        await client.query('COMMIT');
+
+        res.status(201).json({
+            success: true,
+            user_id: newUser.id,
+            email: newUser.email,
+            full_name: newUser.full_name,
+            role: role || 'student'
+        });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('Admin create user error:', err);
+        res.status(500).json({ error: err.message || 'Internal server error' });
+    } finally {
+        client.release();
+    }
+});
+
 // GET /api/auth/me
 router.get('/me', authenticateToken, async (req, res) => {
     try {

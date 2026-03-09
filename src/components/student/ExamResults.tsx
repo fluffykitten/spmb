@@ -44,30 +44,36 @@ export const ExamResults: React.FC<ExamResultsProps> = ({ applicantId }) => {
 
       const { data: attemptsData, error: attemptsError } = await supabase
         .from('exam_attempts')
-        .select('id')
+        .select('id, exam_id, attempt_number, submitted_at')
         .eq('applicant_id', applicantId)
         .eq('status', 'completed');
 
       if (attemptsError) throw attemptsError;
 
       if (attemptsData && attemptsData.length > 0) {
+        const attemptIds = attemptsData.map(a => a.id);
+        const examIds = [...new Set(attemptsData.map(a => a.exam_id))];
+
+        const { data: examsData } = await supabase.from('exams').select('id, title, passing_score').in('id', examIds);
+
         const { data: resultsData, error: resultsError } = await supabase
           .from('exam_results')
-          .select(`
-            *,
-            attempt:exam_attempts!inner(
-              exam_id,
-              attempt_number,
-              submitted_at,
-              exam:exams!inner(title, passing_score)
-            )
-          `)
-          .in('attempt_id', attemptsData.map(a => a.id))
+          .select('*')
+          .in('attempt_id', attemptIds)
           .order('created_at', { ascending: false });
 
         if (resultsError) throw resultsError;
-        setResults(resultsData || []);
-        console.log('[ExamResults] Loaded results:', resultsData?.length);
+
+        const enrichedResults = (resultsData || []).map(r => {
+          const attempt: any = attemptsData.find(a => a.id === r.attempt_id);
+          if (attempt) {
+            attempt.exam = examsData?.find(e => e.id === attempt.exam_id) || { title: 'Unknown Exam', passing_score: 0 };
+          }
+          return { ...r, attempt };
+        });
+
+        setResults(enrichedResults);
+        console.log('[ExamResults] Loaded results:', enrichedResults.length);
       } else {
         setResults([]);
       }
@@ -83,31 +89,43 @@ export const ExamResults: React.FC<ExamResultsProps> = ({ applicantId }) => {
     console.log('[ExamResults] Starting PDF download for result:', result.id, 'attempt:', result.attempt_id);
 
     try {
-      const { data: attemptData, error: attemptError } = await supabase
+      const { data: rawAttempt, error: attemptError } = await supabase
         .from('exam_attempts')
-        .select(`
-          *,
-          applicant:applicants!inner(
-            dynamic_data,
-            registration_number
-          ),
-          exam:exams!inner(title, passing_score)
-        `)
+        .select('*')
         .eq('id', result.attempt_id)
         .single();
 
-      if (attemptError) throw attemptError;
+      if (attemptError || !rawAttempt) throw attemptError;
+
+      const { data: applicant } = await supabase.from('applicants').select('dynamic_data, registration_number').eq('id', rawAttempt.applicant_id).single();
+      const { data: exam } = await supabase.from('exams').select('title, passing_score').eq('id', rawAttempt.exam_id).single();
+
+      const attemptData = {
+        ...rawAttempt,
+        applicant: applicant || { dynamic_data: {}, registration_number: '-' },
+        exam: exam || { title: 'Unknown Exam', passing_score: 0 }
+      };
+
       console.log('[ExamResults] Loaded attempt data for PDF');
 
-      const { data: answersData, error: answersError } = await supabase
+      const { data: rawAnswers, error: answersError } = await supabase
         .from('exam_answers')
-        .select(`
-          *,
-          question:exam_questions!inner(*)
-        `)
+        .select('*')
         .eq('attempt_id', result.attempt_id);
 
       if (answersError) throw answersError;
+
+      let answersData: any[] = [];
+      if (rawAnswers && rawAnswers.length > 0) {
+        const questionIds = [...new Set(rawAnswers.map(a => a.question_id))];
+        const { data: questions } = await supabase.from('exam_questions').select('*').in('id', questionIds);
+
+        answersData = rawAnswers.map(a => ({
+          ...a,
+          question: questions?.find(q => q.id === a.question_id) || { id: a.question_id, question_text: 'Unknown', question_type: 'multiple_choice', points: 0 }
+        }));
+      }
+
       console.log('[ExamResults] Loaded', answersData?.length, 'answers for PDF');
 
       const questionIds = answersData?.map(a => a.question.id) || [];
@@ -206,9 +224,8 @@ export const ExamResults: React.FC<ExamResultsProps> = ({ applicantId }) => {
               key={result.id}
               className="bg-white rounded-xl border border-slate-200 overflow-hidden"
             >
-              <div className={`h-2 ${
-                isPending ? 'bg-amber-400' : result.passed ? 'bg-emerald-500' : 'bg-red-500'
-              }`}></div>
+              <div className={`h-2 ${isPending ? 'bg-amber-400' : result.passed ? 'bg-emerald-500' : 'bg-red-500'
+                }`}></div>
 
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
@@ -235,18 +252,16 @@ export const ExamResults: React.FC<ExamResultsProps> = ({ applicantId }) => {
                     </p>
                   </div>
                 ) : (
-                  <div className={`rounded-lg p-4 mb-4 ${
-                    result.passed ? 'bg-emerald-50 border border-emerald-200' : 'bg-red-50 border border-red-200'
-                  }`}>
+                  <div className={`rounded-lg p-4 mb-4 ${result.passed ? 'bg-emerald-50 border border-emerald-200' : 'bg-red-50 border border-red-200'
+                    }`}>
                     <div className="flex items-center gap-2 mb-1">
                       {result.passed ? (
                         <CheckCircle className="h-5 w-5 text-emerald-600" />
                       ) : (
                         <XCircle className="h-5 w-5 text-red-600" />
                       )}
-                      <p className={`text-lg font-bold ${
-                        result.passed ? 'text-emerald-700' : 'text-red-700'
-                      }`}>
+                      <p className={`text-lg font-bold ${result.passed ? 'text-emerald-700' : 'text-red-700'
+                        }`}>
                         {result.passed ? 'LULUS' : 'TIDAK LULUS'}
                       </p>
                     </div>

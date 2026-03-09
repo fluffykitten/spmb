@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Download, Trash2, RefreshCw, Clock, Database, AlertCircle, FileText, Loader2 } from 'lucide-react';
+import { Download, Trash2, RefreshCw, Clock, Database, AlertCircle, Loader2 } from 'lucide-react';
 import { getBackupList, downloadBackup, deleteBackup, formatFileSize, type BackupMetadata } from '../../lib/backupService';
 import { ConfirmDialog } from '../shared/ConfirmDialog';
 import { format } from 'date-fns';

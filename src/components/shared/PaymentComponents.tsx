@@ -249,8 +249,8 @@ interface PaymentSummaryCardProps {
 }
 
 export const PaymentSummaryCard: React.FC<PaymentSummaryCardProps> = ({ paymentRecords, batchName }) => {
-  const totalAmount = paymentRecords.reduce((sum, record) => sum + record.total_amount, 0);
-  const totalPaid = paymentRecords.reduce((sum, record) => sum + record.paid_amount, 0);
+  const totalAmount = paymentRecords.reduce((sum, record) => sum + Number(record.total_amount || 0), 0);
+  const totalPaid = paymentRecords.reduce((sum, record) => sum + Number(record.paid_amount || 0), 0);
   const totalRemaining = totalAmount - totalPaid;
   const percentage = totalAmount > 0 ? Math.round((totalPaid / totalAmount) * 100) : 0;
 
@@ -260,8 +260,8 @@ export const PaymentSummaryCard: React.FC<PaymentSummaryCardProps> = ({ paymentR
   const statusConfig = allPaid
     ? getPaymentStatusConfig('paid')
     : anyPaid
-    ? getPaymentStatusConfig('partial')
-    : getPaymentStatusConfig('unpaid');
+      ? getPaymentStatusConfig('partial')
+      : getPaymentStatusConfig('unpaid');
 
   return (
     <div className={`rounded-xl border-2 p-6 ${statusConfig.color} bg-opacity-50`}>

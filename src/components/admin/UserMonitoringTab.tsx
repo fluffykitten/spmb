@@ -36,6 +36,7 @@ interface MonitoringData {
 
 export const UserMonitoringTab: React.FC = () => {
   const [data, setData] = useState<MonitoringData[]>([]);
+  const [wawancaraMap, setWawancaraMap] = useState<Record<string, { status: string; score: number }>>({});
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -70,6 +71,25 @@ export const UserMonitoringTab: React.FC = () => {
 
       console.log('[UserMonitoringTab] Fetched monitoring data:', monitoringData?.length || 0);
       setData((monitoringData || []) as MonitoringData[]);
+
+      // Fetch wawancara interview statuses
+      try {
+        const token = localStorage.getItem('auth_token');
+        const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+        const wRes = await fetch(`${apiBase}/api/wawancara/interviews`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const wData = await wRes.json();
+        const map: Record<string, { status: string; score: number }> = {};
+        for (const w of (wData.data || [])) {
+          if (w.applicant_id) {
+            map[w.applicant_id] = { status: w.status, score: Number(w.weighted_score) || 0 };
+          }
+        }
+        setWawancaraMap(map);
+      } catch (wErr) {
+        console.warn('[UserMonitoringTab] Could not fetch wawancara data:', wErr);
+      }
     } catch (error) {
       console.error('[UserMonitoringTab] Error fetching monitoring data:', error);
     } finally {
@@ -359,6 +379,9 @@ export const UserMonitoringTab: React.FC = () => {
                 <th className="px-4 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider min-w-[120px]">
                   Exam
                 </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider min-w-[130px]">
+                  Wawancara
+                </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider min-w-[140px]">
                   Biaya Masuk
                 </th>
@@ -416,6 +439,34 @@ export const UserMonitoringTab: React.FC = () => {
                           <span className="text-xs text-slate-600">Score: {item.exam_score}</span>
                         )}
                       </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      {item.applicant_id && wawancaraMap[item.applicant_id] ? (
+                        <div className="flex flex-col gap-1">
+                          {wawancaraMap[item.applicant_id].status === 'completed' ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+                              ✅ Selesai
+                            </span>
+                          ) : wawancaraMap[item.applicant_id].status === 'in_progress' ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                              🔄 Berlangsung
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                              📝 Draft
+                            </span>
+                          )}
+                          {wawancaraMap[item.applicant_id].status === 'completed' && (
+                            <span className="text-xs text-slate-600">
+                              Skor: {wawancaraMap[item.applicant_id].score.toFixed(2)}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                          Belum Ada
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       {item.applicant_id ? (

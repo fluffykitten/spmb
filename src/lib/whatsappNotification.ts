@@ -142,9 +142,45 @@ export async function sendWhatsAppNotification(params: WhatsAppNotificationParam
       };
     }
 
-    const formattedPhone = formatPhoneNumber(params.phone);
+    let targetPhone = params.phone;
 
-    if (!validatePhoneNumber(params.phone)) {
+    // Override phone number if applicantId is provided to ensure we always 
+    // send to the registered account phone number (user profile)
+    if (params.applicantId) {
+      try {
+        const { data: applicant } = await supabase
+          .from('applicants')
+          .select('user_id')
+          .eq('id', params.applicantId)
+          .maybeSingle();
+
+        if (applicant?.user_id) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('phone_number')
+            .eq('user_id', applicant.user_id)
+            .maybeSingle();
+
+          if (profile?.phone_number) {
+            targetPhone = profile.phone_number;
+            console.log(`[WhatsApp] Using registered profile phone number for applicant ${params.applicantId}`);
+          }
+        }
+      } catch (err) {
+        console.warn('[WhatsApp] Failed to fetch profile phone number, falling back to provided phone:', err);
+      }
+    }
+
+    if (!targetPhone) {
+      return {
+        success: false,
+        error: 'No phone number provided or found in profile'
+      };
+    }
+
+    const formattedPhone = formatPhoneNumber(targetPhone);
+
+    if (!validatePhoneNumber(targetPhone)) {
       return {
         success: false,
         error: 'Invalid phone number format'

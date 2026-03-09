@@ -143,6 +143,7 @@ class InsertBuilder {
         this._single = false;
     }
     select(cols) { this._returning = cols || '*'; return this; }
+    single() { this._single = true; return this; }
     /**
      * @param {any} resolve
      * @param {any} [reject]
@@ -178,6 +179,7 @@ class UpdateBuilder {
     eq(column, value) { this._filters.push({ column, op: 'eq', value }); return this; }
     in(column, values) { this._filters.push({ column, op: 'in', value: values }); return this; }
     select(cols) { this._returning = cols || '*'; return this; }
+    single() { this._single = true; return this; }
     /**
      * @param {any} resolve
      * @param {any} [reject]
@@ -239,6 +241,7 @@ class UpsertBuilder {
         this._single = false;
     }
     select(cols) { this._returning = cols || '*'; return this; }
+    single() { this._single = true; return this; }
     /**
      * @param {any} resolve
      * @param {any} [reject]

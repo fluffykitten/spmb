@@ -78,7 +78,7 @@ export const PaymentUpdateModal: React.FC<PaymentUpdateModalProps> = ({
 
       if (applicantData?.dynamic_data) {
         const dynamicData = applicantData.dynamic_data as any;
-        const phone = dynamicData.no_telepon || dynamicData.telepon || dynamicData.phone || null;
+        const phone = dynamicData.no_telepon || dynamicData.no_hp || dynamicData.telepon || dynamicData.phone_number || dynamicData.phone || null;
         setPhoneNumber(phone);
         console.log('[PaymentUpdateModal] Student phone number:', phone);
       }
@@ -183,72 +183,68 @@ export const PaymentUpdateModal: React.FC<PaymentUpdateModalProps> = ({
       console.log('[PaymentUpdateModal] Payment updated successfully');
 
       if (sendWhatsAppNotification && formData.amountPaid > 0) {
-        if (!phoneNumber) {
-          console.warn('[PaymentUpdateModal] Cannot send WhatsApp notification: Student has no phone number');
-          alert('Notifikasi WhatsApp tidak dapat dikirim karena siswa belum memasukkan nomor telepon.');
-        } else {
-          try {
-            const paymentTypeLabel = activePaymentType === 'entrance_fee' ? 'Biaya Masuk' : 'Biaya Administrasi';
-            const statusLabels = {
-              'unpaid': 'Belum Dibayar',
-              'partial': 'Dibayar Sebagian',
-              'paid': 'Lunas',
-              'waived': 'Dibebaskan'
-            };
-            const statusLabel = statusLabels[formData.status] || formData.status;
-            const methodLabels = {
-              'cash': 'Tunai',
-              'transfer': 'Transfer Bank',
-              'other': 'Lainnya'
-            };
-            const methodLabel = methodLabels[formData.paymentMethod] || formData.paymentMethod;
+        try {
+          const paymentTypeLabel = activePaymentType === 'entrance_fee' ? 'Biaya Masuk' : 'Biaya Administrasi';
+          const statusLabels = {
+            'unpaid': 'Belum Dibayar',
+            'partial': 'Dibayar Sebagian',
+            'paid': 'Lunas',
+            'waived': 'Dibebaskan'
+          };
+          const statusLabel = statusLabels[formData.status] || formData.status;
+          const methodLabels = {
+            'cash': 'Tunai',
+            'transfer': 'Transfer Bank',
+            'other': 'Lainnya'
+          };
+          const methodLabel = methodLabels[formData.paymentMethod] || formData.paymentMethod;
 
-            const formatAmountOnly = (amount: number) => {
-              return new Intl.NumberFormat('id-ID', {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-              }).format(amount);
-            };
+          const formatAmountOnly = (amount: number) => {
+            return new Intl.NumberFormat('id-ID', {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0
+            }).format(amount);
+          };
 
-            console.log('[PaymentUpdateModal] Sending WhatsApp notification:', {
-              phone: phoneNumber,
-              templateKey: 'payment_status_updated',
-              variables: {
-                student_name: applicantName,
-                payment_type_label: paymentTypeLabel,
-                status_label: statusLabel,
-                amount_paid: formatAmountOnly(formData.amountPaid),
-                total_amount: formatAmountOnly(currentTotal),
-                remaining_amount: formatAmountOnly(remainingAfterPayment),
-                payment_date: new Date(formData.paymentDate).toLocaleDateString('id-ID'),
-                payment_method: methodLabel
-              }
-            });
-
-            const result = await sendWhatsAppNotificationHelper({
-              phone: phoneNumber,
-              templateKey: 'payment_status_updated',
-              variables: {
-                student_name: applicantName,
-                payment_type_label: paymentTypeLabel,
-                status_label: statusLabel,
-                amount_paid: formatAmountOnly(formData.amountPaid),
-                total_amount: formatAmountOnly(currentTotal),
-                remaining_amount: formatAmountOnly(remainingAfterPayment),
-                payment_date: new Date(formData.paymentDate).toLocaleDateString('id-ID'),
-                payment_method: methodLabel
-              },
-              applicantId
-            });
-
-            if (result.success) {
-              console.log('[PaymentUpdateModal] WhatsApp notification sent successfully');
-            } else {
-              console.error('[PaymentUpdateModal] WhatsApp notification failed:', result.error);
+          console.log('[PaymentUpdateModal] Sending WhatsApp notification:', {
+            phone: phoneNumber || 'profile_number',
+            templateKey: 'payment_status_updated',
+            variables: {
+              student_name: applicantName,
+              payment_type_label: paymentTypeLabel,
+              status_label: statusLabel,
+              amount_paid: formatAmountOnly(formData.amountPaid),
+              total_amount: formatAmountOnly(currentTotal),
+              remaining_amount: formatAmountOnly(remainingAfterPayment),
+              payment_date: new Date(formData.paymentDate).toLocaleDateString('id-ID'),
+              payment_method: methodLabel
             }
-          } catch (notifError) {
-            console.error('[PaymentUpdateModal] Failed to send WhatsApp notification:', notifError);
+          });
+
+          const result = await sendWhatsAppNotificationHelper({
+            phone: phoneNumber || '',
+            templateKey: 'payment_status_updated',
+            variables: {
+              student_name: applicantName,
+              payment_type_label: paymentTypeLabel,
+              status_label: statusLabel,
+              amount_paid: formatAmountOnly(formData.amountPaid),
+              total_amount: formatAmountOnly(currentTotal),
+              remaining_amount: formatAmountOnly(remainingAfterPayment),
+              payment_date: new Date(formData.paymentDate).toLocaleDateString('id-ID'),
+              payment_method: methodLabel
+            },
+            applicantId
+          });
+
+          if (result.success) {
+            console.log('[PaymentUpdateModal] WhatsApp notification sent successfully');
+          } else {
+            console.error('[PaymentUpdateModal] WhatsApp notification failed:', result.error);
+            alert(`Gagal mengirim WhatsApp: ${result.error}`);
           }
+        } catch (notifError) {
+          console.error('[PaymentUpdateModal] Failed to send WhatsApp notification:', notifError);
         }
       }
 

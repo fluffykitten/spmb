@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { DataTable, Column } from '../../components/shared/DataTable';
 import { ConfirmDialog } from '../../components/shared/ConfirmDialog';
-import { Plus, Edit2, Trash2, Key, Eye, EyeOff, Copy, Check, Users, BarChart3 } from 'lucide-react';
-import { UserMonitoringTab } from '../../components/admin/UserMonitoringTab';
+import { Plus, Edit2, Trash2, Key, Eye, EyeOff, Copy, Check } from 'lucide-react';
 
 interface User {
   id: string;
@@ -16,7 +15,6 @@ interface User {
 }
 
 export const UserManagement: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'users' | 'monitoring'>('users');
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRole, setSelectedRole] = useState<string>('all');
@@ -114,8 +112,8 @@ export const UserManagement: React.FC = () => {
       sortable: true,
       render: (item) => (
         <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.role === 'admin'
-            ? 'bg-purple-100 text-purple-700'
-            : 'bg-blue-100 text-blue-700'
+          ? 'bg-purple-100 text-purple-700'
+          : 'bg-blue-100 text-blue-700'
           }`}>
           {item.role}
         </span>
@@ -132,8 +130,8 @@ export const UserManagement: React.FC = () => {
       sortable: true,
       render: (item) => (
         <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.is_active
-            ? 'bg-emerald-100 text-emerald-700'
-            : 'bg-red-100 text-red-700'
+          ? 'bg-emerald-100 text-emerald-700'
+          : 'bg-red-100 text-red-700'
           }`}>
           {item.is_active ? 'Active' : 'Inactive'}
         </span>
@@ -250,83 +248,50 @@ export const UserManagement: React.FC = () => {
           <h2 className="text-2xl font-bold text-slate-800">User Management</h2>
           <p className="text-slate-600 mt-1">Manage all system users and monitor student progress</p>
         </div>
-        {activeTab === 'users' && (
-          <div className="flex gap-2">
-            <button
-              onClick={() => fetchUsers()}
-              className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors"
-              title="Refresh"
-            >
-              Refresh
-            </button>
-            <button
-              onClick={() => setCreateModal(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Create User
-            </button>
-          </div>
-        )}
-      </div>
-
-      <div className="border-b border-slate-200">
-        <div className="flex gap-4">
+        <div className="flex gap-2">
           <button
-            onClick={() => setActiveTab('users')}
-            className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${activeTab === 'users'
-                ? 'border-blue-600 text-blue-600 font-medium'
-                : 'border-transparent text-slate-600 hover:text-slate-800'
-              }`}
+            onClick={() => fetchUsers()}
+            className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors"
+            title="Refresh"
           >
-            <Users className="h-4 w-4" />
-            User List
+            Refresh
           </button>
           <button
-            onClick={() => setActiveTab('monitoring')}
-            className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${activeTab === 'monitoring'
-                ? 'border-blue-600 text-blue-600 font-medium'
-                : 'border-transparent text-slate-600 hover:text-slate-800'
-              }`}
+            onClick={() => setCreateModal(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
           >
-            <BarChart3 className="h-4 w-4" />
-            Student Monitoring
+            <Plus className="h-4 w-4" />
+            Create User
           </button>
         </div>
       </div>
 
-      {activeTab === 'users' ? (
-        <>
-          <div className="flex gap-4">
-            {[
-              { key: 'all', label: 'All Users', count: users.length },
-              { key: 'admin', label: 'Admins', count: users.filter(u => u.role === 'admin').length },
-              { key: 'student', label: 'Students', count: users.filter(u => u.role === 'student').length }
-            ].map(filter => (
-              <button
-                key={filter.key}
-                onClick={() => setSelectedRole(filter.key)}
-                className={`px-4 py-2 rounded-lg transition-colors ${selectedRole === filter.key
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
-                  }`}
-              >
-                {filter.label} ({filter.count})
-              </button>
-            ))}
-          </div>
+      <div className="flex gap-4">
+        {[
+          { key: 'all', label: 'All Users', count: users.length },
+          { key: 'admin', label: 'Admins', count: users.filter(u => u.role === 'admin').length },
+          { key: 'student', label: 'Students', count: users.filter(u => u.role === 'student').length }
+        ].map(filter => (
+          <button
+            key={filter.key}
+            onClick={() => setSelectedRole(filter.key)}
+            className={`px-4 py-2 rounded-lg transition-colors ${selectedRole === filter.key
+              ? 'bg-blue-600 text-white'
+              : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+              }`}
+          >
+            {filter.label} ({filter.count})
+          </button>
+        ))}
+      </div>
 
-          <DataTable
-            data={filteredUsers}
-            columns={columns}
-            searchable={true}
-            searchPlaceholder="Search by name or email..."
-            emptyMessage="No users found"
-          />
-        </>
-      ) : (
-        <UserMonitoringTab />
-      )}
+      <DataTable
+        data={filteredUsers}
+        columns={columns}
+        searchable={true}
+        searchPlaceholder="Search by name or email..."
+        emptyMessage="No users found"
+      />
 
       <ConfirmDialog
         isOpen={deleteDialog.isOpen}
@@ -426,17 +391,18 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ onClose, onPasswordGe
     try {
       console.log('[CreateUserModal] Creating user with:', { email, fullName, role, phone });
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
         throw new Error('Not authenticated');
       }
 
-      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-create-user`;
+      const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const apiUrl = `${apiBase}/api/auth/admin-create-user`;
 
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -516,8 +482,8 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ onClose, onPasswordGe
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 outline-none ${emailError
-                    ? 'border-red-300 focus:ring-red-500'
-                    : 'border-slate-300 focus:ring-blue-500'
+                  ? 'border-red-300 focus:ring-red-500'
+                  : 'border-slate-300 focus:ring-blue-500'
                   }`}
                 required
               />

@@ -54,35 +54,37 @@ export const useStudentGenerations = (): UseStudentGenerationsResult => {
         return;
       }
 
-      const { data, error: genError } = await supabase
+      const { data: genData, error: genError } = await supabase
         .from('document_generations')
-        .select(`
-          id,
-          template_id,
-          generation_count,
-          last_generated_at,
-          downloaded_at,
-          letter_templates!inner (
-            name,
-            template_type,
-            description
-          )
-        `)
+        .select('*')
         .eq('applicant_id', applicantData.id)
         .order('last_generated_at', { ascending: false });
 
       if (genError) throw genError;
 
-      const mappedGenerations: GenerationRecord[] = (data || []).map((gen: any) => ({
-        id: gen.id,
-        template_id: gen.template_id,
-        generation_count: gen.generation_count,
-        last_generated_at: gen.last_generated_at,
-        downloaded_at: gen.downloaded_at,
-        template_name: gen.letter_templates.name,
-        template_type: gen.letter_templates.template_type,
-        template_description: gen.letter_templates.description,
-      }));
+      let mappedGenerations: GenerationRecord[] = [];
+
+      if (genData && genData.length > 0) {
+        const templateIds = [...new Set(genData.map(g => g.template_id))];
+        const { data: templates } = await supabase
+          .from('letter_templates')
+          .select('id, name, template_type, description')
+          .in('id', templateIds);
+
+        mappedGenerations = genData.map((gen: any) => {
+          const tpl = templates?.find(t => t.id === gen.template_id);
+          return {
+            id: gen.id,
+            template_id: gen.template_id,
+            generation_count: gen.generation_count,
+            last_generated_at: gen.last_generated_at,
+            downloaded_at: gen.downloaded_at,
+            template_name: tpl?.name || 'Unknown Template',
+            template_type: tpl?.template_type || 'other',
+            template_description: tpl?.description || null,
+          };
+        });
+      }
 
       setGenerations(mappedGenerations);
     } catch (err) {

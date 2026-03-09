@@ -1,22 +1,12 @@
-import { Router } from 'express';
-import pool from '../db.js';
-import { authenticateToken } from '../middleware/auth.js';
+import pool from './db.js';
 
-const router = Router();
-
-// POST /api/applicants/generate-registration-number
-router.post('/generate-registration-number', authenticateToken, async (req, res) => {
+async function test() {
     try {
-        // Format: Academic Year (e.g., 2526) + Year (26) + Month (02) + Day (28) + sequence (020)
-        // Example: 2526260228020
-
         const now = new Date();
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const day = String(now.getDate()).padStart(2, '0');
 
-        // Calculate academic year (e.g., if month >= 7, it's 2425, else 2324 for early 2024)
-        // Based on user example: 2526 for year 2026.
         const currentYear2Digit = year % 100;
         let academicYear = "";
         if (now.getMonth() >= 6) { // July or later
@@ -27,6 +17,8 @@ router.post('/generate-registration-number', authenticateToken, async (req, res)
 
         const datePrefix = `${currentYear2Digit}${month}${day}`;
         const prefix = `${academicYear}${datePrefix}`;
+
+        console.log('Prefix:', prefix);
 
         // Find existing applicants for the academic year to increment the sequence continuously
         const { rows } = await pool.query(
@@ -49,11 +41,13 @@ router.post('/generate-registration-number', authenticateToken, async (req, res)
         const sequenceStr = String(sequence).padStart(3, '0');
         const newRegNumber = `${prefix}${sequenceStr}`;
 
-        res.json({ data: { registration_number: newRegNumber }, error: null });
-    } catch (err) {
-        console.error('Error generating registration number:', err);
-        res.status(500).json({ data: null, error: err.message });
-    }
-});
+        console.log('New Reg Number:', newRegNumber);
 
-export default router;
+        pool.end();
+    } catch (e) {
+        console.error(e);
+        pool.end();
+    }
+}
+
+test();

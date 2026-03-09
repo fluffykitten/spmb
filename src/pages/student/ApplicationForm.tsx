@@ -138,6 +138,14 @@ export const ApplicationForm: React.FC = () => {
     setMessage(null);
 
     try {
+      const { data: activeBatch } = await supabase
+        .from('registration_batches')
+        .select('id, entrance_fee_amount, administration_fee_amount')
+        .eq('is_active', true)
+        .maybeSingle();
+
+      const batchId = activeBatch?.id;
+
       const { data: existing } = await supabase
         .from('applicants')
         .select('id')
@@ -150,6 +158,7 @@ export const ApplicationForm: React.FC = () => {
           .update({
             dynamic_data: formData,
             status: 'draft',
+            registration_batch_id: batchId,
             updated_at: new Date().toISOString(),
           })
           .eq('user_id', user.id);
@@ -161,6 +170,7 @@ export const ApplicationForm: React.FC = () => {
           .insert({
             user_id: user.id,
             dynamic_data: formData,
+            registration_batch_id: batchId,
             status: 'draft',
           });
 
@@ -191,6 +201,14 @@ export const ApplicationForm: React.FC = () => {
     setMessage(null);
 
     try {
+      const { data: activeBatch } = await supabase
+        .from('registration_batches')
+        .select('id, entrance_fee_amount, administration_fee_amount')
+        .eq('is_active', true)
+        .maybeSingle();
+
+      const batchId = activeBatch?.id;
+
       const { data: existing } = await supabase
         .from('applicants')
         .select('id, registration_number')
@@ -236,6 +254,7 @@ export const ApplicationForm: React.FC = () => {
             dynamic_data: formData,
             status: 'submitted',
             registration_number: registrationNumber,
+            registration_batch_id: batchId,
             updated_at: new Date().toISOString(),
           })
           .eq('user_id', user.id)
@@ -252,6 +271,7 @@ export const ApplicationForm: React.FC = () => {
             user_id: user.id,
             dynamic_data: formData,
             registration_number: registrationNumber,
+            registration_batch_id: batchId,
             status: 'submitted',
           })
           .select('id, registration_number')
@@ -260,6 +280,38 @@ export const ApplicationForm: React.FC = () => {
         if (error) throw error;
         applicantId = data?.id;
         registrationNumber = data?.registration_number || registrationNumber;
+      }
+
+      // Initialize payment records if active batch exists
+      if (applicantId && activeBatch) {
+        // Check if payment records already exist
+        const { data: existingPayments } = await supabase
+          .from('payment_records')
+          .select('id')
+          .eq('applicant_id', applicantId);
+
+        if (!existingPayments || existingPayments.length === 0) {
+          try {
+            console.log('[ApplicationForm] Initializing payment records for new applicant');
+            await supabase.from('payment_records').insert([
+              {
+                applicant_id: applicantId,
+                payment_type: 'entrance_fee',
+                total_amount: activeBatch.entrance_fee_amount || 0,
+                payment_status: 'unpaid'
+              },
+              {
+                applicant_id: applicantId,
+                payment_type: 'administration_fee',
+                total_amount: activeBatch.administration_fee_amount || 0,
+                payment_status: 'unpaid'
+              }
+            ]);
+          } catch (paymentErr) {
+            console.error('[ApplicationForm] Failed to initialize payment records:', paymentErr);
+            // Non-critical, continue
+          }
+        }
       }
 
       const phoneNumber = getFieldValue(formData, FIELD_NAMES.NO_TELEPON);
