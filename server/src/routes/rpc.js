@@ -115,11 +115,11 @@ router.post('/:functionName', authenticateToken, async (req, res) => {
             }
 
             case 'admin_reset_user_password': {
-                const { target_user_id } = params;
-                const newPassword = crypto.randomBytes(6).toString('hex');
-                const hash = await bcrypt.hash(newPassword, 10);
+                const { target_user_id, new_password } = params;
+                const passwordToUse = new_password || crypto.randomBytes(6).toString('hex');
+                const hash = await bcrypt.hash(passwordToUse, 10);
                 await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, target_user_id]);
-                result = { new_password: newPassword };
+                result = { success: true, new_password: passwordToUse };
                 break;
             }
 
