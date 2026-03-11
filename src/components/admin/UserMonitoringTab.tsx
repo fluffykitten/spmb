@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabase';
+import { useAcademicYear } from '../../contexts/AcademicYearContext';
 import { MonitoringStatusBadge } from './MonitoringStatusBadge';
 import { DocumentDownloadStatus } from './DocumentDownloadStatus';
 import { PaymentStatusCell } from './PaymentStatusCell';
@@ -32,6 +33,7 @@ interface MonitoringData {
   administration_fee_status: string | null;
   administration_fee_paid: number | null;
   administration_fee_total: number | null;
+  academic_year_id: string | null;
 }
 
 export const UserMonitoringTab: React.FC = () => {
@@ -52,10 +54,11 @@ export const UserMonitoringTab: React.FC = () => {
     applicantName: string;
     paymentType: 'entrance_fee' | 'administration_fee';
   } | null>(null);
+  const { selectedYearId } = useAcademicYear();
 
   useEffect(() => {
     fetchMonitoringData();
-  }, []);
+  }, [selectedYearId]);
 
   const fetchMonitoringData = async () => {
     try {
@@ -70,7 +73,12 @@ export const UserMonitoringTab: React.FC = () => {
       if (error) throw error;
 
       console.log('[UserMonitoringTab] Fetched monitoring data:', monitoringData?.length || 0);
-      setData((monitoringData || []) as MonitoringData[]);
+      // Filter by selected academic year (client-side since virtual view is not parameterized)
+      let filtered = (monitoringData || []) as MonitoringData[];
+      if (selectedYearId) {
+        filtered = filtered.filter(item => item.academic_year_id === selectedYearId);
+      }
+      setData(filtered);
 
       // Fetch wawancara interview statuses
       try {

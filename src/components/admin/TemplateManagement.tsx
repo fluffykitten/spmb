@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Search, Plus, Edit, Trash2, Copy, Loader, AlertCircle } from 'lucide-react';
 import { WhatsAppTemplate } from '../../lib/whatsappNotification';
+import { VariableCheatSheet } from './VariableCheatSheet';
 
 export const TemplateManagement: React.FC = () => {
   const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
@@ -187,11 +188,10 @@ export const TemplateManagement: React.FC = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2">
                     <h4 className="font-medium text-slate-800">{template.template_name}</h4>
-                    <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${
-                      template.is_active
+                    <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${template.is_active
                         ? 'bg-emerald-100 text-emerald-700'
                         : 'bg-slate-100 text-slate-600'
-                    }`}>
+                      }`}>
                       {template.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </div>
@@ -216,11 +216,10 @@ export const TemplateManagement: React.FC = () => {
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <button
                     onClick={() => handleToggleActive(template.id, template.is_active)}
-                    className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                      template.is_active
+                    className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${template.is_active
                         ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                         : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                    }`}
+                      }`}
                   >
                     {template.is_active ? 'Deactivate' : 'Activate'}
                   </button>
@@ -438,9 +437,12 @@ const TemplateFormModal: React.FC<TemplateFormModalProps> = ({ template, onClose
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Message Body *
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-slate-700">
+                Message Body *
+              </label>
+              <VariableCheatSheet />
+            </div>
             <textarea
               id="message_body"
               value={formData.message_body}
@@ -452,7 +454,7 @@ const TemplateFormModal: React.FC<TemplateFormModalProps> = ({ template, onClose
             />
             <div className="flex items-center justify-between mt-1">
               <p className="text-xs text-slate-500">
-                Use {'{{'} and {'}}' } for variables (e.g., {'{{nama_lengkap}}'})
+                Use {'{{'} and {'}}'} for variables (e.g., {'{{nama_lengkap}}'})
               </p>
               <p className={`text-xs ${charCount > 1000 ? 'text-amber-600' : 'text-slate-500'}`}>
                 {charCount} characters {charCount > 1000 && '(long message)'}

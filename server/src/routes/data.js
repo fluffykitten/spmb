@@ -60,7 +60,8 @@ const ALLOWED_TABLES = [
     'whatsapp_templates', 'email_logs',
     'user_monitoring_status', 'letterhead_config',
     'wawancara_criteria', 'wawancara_question_bank', 'wawancara_interviews',
-    'wawancara_scores', 'wawancara_notes', 'wawancara_ai_analyses'
+    'wawancara_scores', 'wawancara_notes', 'wawancara_ai_analyses',
+    'academic_years'
 ];
 
 // Virtual views - these are complex queries that look like tables to the frontend
@@ -81,6 +82,7 @@ const VIRTUAL_VIEWS = {
             a.exam_status,
             a.exam_score,
             a.final_score,
+            a.academic_year_id,
             COALESCE(doc_count.cnt, 0)::int as documents_downloaded_count,
             COALESCE(doc_total.cnt, 0)::int as total_documents_count,
             ir.status as latest_interview_request_status,
@@ -116,7 +118,7 @@ const VIRTUAL_VIEWS = {
 };
 
 // Tables that can be queried without authentication (public landing page)
-const PUBLIC_TABLES = ['app_config', 'registration_batches', 'slideshow_images'];
+const PUBLIC_TABLES = ['app_config', 'registration_batches', 'slideshow_images', 'academic_years'];
 
 function validateTable(table) {
     if (!ALLOWED_TABLES.includes(table)) {

@@ -154,12 +154,20 @@ router.delete('/questions/:id', async (req, res) => {
 // GET /api/wawancara/interviews
 router.get('/interviews', async (req, res) => {
     try {
-        const { rows } = await pool.query(`
+        const { academic_year_id } = req.query;
+        let queryStr = `
             SELECT wi.*, p.full_name as interviewer_name, p.email as interviewer_email
             FROM wawancara_interviews wi
             LEFT JOIN profiles p ON p.user_id = wi.interviewer_id
-            ORDER BY wi.updated_at DESC
-        `);
+        `;
+        const params = [];
+        if (academic_year_id) {
+            queryStr += ` WHERE wi.academic_year_id = $1`;
+            params.push(academic_year_id);
+        }
+        queryStr += ` ORDER BY wi.updated_at DESC`;
+
+        const { rows } = await pool.query(queryStr, params);
         res.json({ data: rows, error: null });
     } catch (err) {
         console.error('Get interviews error:', err);
@@ -228,7 +236,7 @@ router.post('/interviews/from-request', async (req, res) => {
 
         // Get applicant data
         const { rows: applicants } = await pool.query(
-            'SELECT id, dynamic_data, registration_number FROM applicants WHERE id = $1',
+            'SELECT id, dynamic_data, registration_number, academic_year_id FROM applicants WHERE id = $1',
             [applicant_id]
         );
         if (!applicants[0]) {
@@ -260,10 +268,10 @@ router.post('/interviews/from-request', async (req, res) => {
         // Create wawancara interview record
         const { rows } = await pool.query(
             `INSERT INTO wawancara_interviews (interviewer_id, applicant_id, candidate_name, candidate_registration_no, 
-             candidate_origin_school, candidate_birth_date, candidate_parent_name, status)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, 'draft') RETURNING *`,
+             candidate_origin_school, candidate_birth_date, candidate_parent_name, status, academic_year_id)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, 'draft', $8) RETURNING *`,
             [req.user.userId, applicant_id, candidateName, candidateRegNo,
-                candidateSchool, candidateBirthDate, candidateParentName]
+                candidateSchool, candidateBirthDate, candidateParentName, applicant.academic_year_id]
         );
 
         res.json({ data: { ...rows[0], meeting_link: meetingLink }, error: null });
@@ -278,15 +286,15 @@ router.post('/interviews', async (req, res) => {
     try {
         const {
             applicant_id, candidate_name, candidate_registration_no,
-            candidate_origin_school, candidate_birth_date, candidate_parent_name
+            candidate_origin_school, candidate_birth_date, candidate_parent_name, academic_year_id
         } = req.body;
 
         const { rows } = await pool.query(
             `INSERT INTO wawancara_interviews (interviewer_id, applicant_id, candidate_name, candidate_registration_no, 
-             candidate_origin_school, candidate_birth_date, candidate_parent_name, status)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, 'draft') RETURNING *`,
+             candidate_origin_school, candidate_birth_date, candidate_parent_name, status, academic_year_id)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, 'draft', $8) RETURNING *`,
             [req.user.userId, applicant_id || null, candidate_name || '', candidate_registration_no || '',
-            candidate_origin_school || '', candidate_birth_date || null, candidate_parent_name || '']
+            candidate_origin_school || '', candidate_birth_date || null, candidate_parent_name || '', academic_year_id || null]
         );
         res.json({ data: rows[0], error: null });
     } catch (err) {

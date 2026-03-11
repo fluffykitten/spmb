@@ -3,6 +3,7 @@ import { Plus, Edit2, Trash2, Calendar, DollarSign, Users, CheckCircle, XCircle,
 import { supabase } from '../../lib/supabase';
 import { formatCurrency } from '../../components/shared/PaymentComponents';
 import { ConfirmDialog } from '../../components/shared/ConfirmDialog';
+import { useAcademicYear } from '../../contexts/AcademicYearContext';
 
 interface RegistrationBatch {
   id: string;
@@ -39,6 +40,7 @@ export const RegistrationBatchManagement: React.FC = () => {
   const [batchStats, setBatchStats] = useState<Record<string, any>>({});
   const [processingBatch, setProcessingBatch] = useState<string | null>(null);
   const [actionResult, setActionResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const { selectedYearId, activeYear } = useAcademicYear();
 
   const [formData, setFormData] = useState<BatchFormData>({
     name: '',
@@ -55,16 +57,18 @@ export const RegistrationBatchManagement: React.FC = () => {
 
   useEffect(() => {
     fetchBatches();
-  }, []);
+  }, [selectedYearId]);
 
   const fetchBatches = async () => {
     try {
       setLoading(true);
 
-      const { data: batchData, error: batchError } = await supabase
+      let batchQuery = supabase
         .from('registration_batches')
         .select('*')
         .order('display_order', { ascending: true });
+      if (selectedYearId) batchQuery = batchQuery.eq('academic_year_id', selectedYearId);
+      const { data: batchData, error: batchError } = await batchQuery;
 
       if (batchError) throw batchError;
 
@@ -164,9 +168,13 @@ export const RegistrationBatchManagement: React.FC = () => {
 
         if (error) throw error;
       } else {
+        const insertData = {
+          ...dataToSubmit,
+          academic_year_id: activeYear?.id || selectedYearId || null,
+        };
         const { error } = await supabase
           .from('registration_batches')
-          .insert([dataToSubmit]);
+          .insert([insertData]);
 
         if (error) throw error;
       }

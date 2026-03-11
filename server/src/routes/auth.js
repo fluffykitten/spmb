@@ -224,4 +224,60 @@ router.get('/me', authenticateToken, async (req, res) => {
     }
 });
 
+// GET /api/auth/setup-status
+router.get('/setup-status', async (req, res) => {
+    try {
+        const { rows } = await pool.query("SELECT id FROM profiles WHERE role = 'admin' LIMIT 1");
+        res.json({ needsSetup: rows.length === 0 });
+    } catch (err) {
+        console.error('Setup status error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// POST /api/auth/setup
+router.post('/setup', async (req, res) => {
+    const client = await pool.connect();
+    try {
+        // Double check if admin already exists
+        const { rows: admins } = await client.query("SELECT id FROM profiles WHERE role = 'admin' LIMIT 1");
+        if (admins.length > 0) {
+            return res.status(403).json({ error: 'Setup already completed' });
+        }
+
+        const { fullName, email, password } = req.body;
+
+        if (!fullName || !email || !password) {
+            return res.status(400).json({ error: 'Full name, email, and password required' });
+        }
+
+        await client.query('BEGIN');
+
+        const passwordHash = await bcrypt.hash(password, 10);
+
+        const { rows: newUsers } = await client.query(
+            'INSERT INTO users (email, password_hash, full_name) VALUES ($1, $2, $3) RETURNING id, email, full_name',
+            [email.toLowerCase(), passwordHash, fullName]
+        );
+
+        const newUser = newUsers[0];
+
+        await client.query(
+            `INSERT INTO profiles (user_id, role, full_name, email) 
+             VALUES ($1, 'admin', $2, $3)`,
+            [newUser.id, fullName, email.toLowerCase()]
+        );
+
+        await client.query('COMMIT');
+
+        res.status(201).json({ success: true, message: 'Super admin created successfully' });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('Setup error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+});
+
 export default router;

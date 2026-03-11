@@ -1,4 +1,4 @@
-# Panduan Menjalankan Aplikasi SPMB (Sistem Penerimaan Murid Baru)
+﻿# Panduan Menjalankan Aplikasi SPMB (Sistem Penerimaan Murid Baru)
 
 Selamat datang! Panduan ini dibuat khusus untuk pemula agar Anda bisa menjalankan aplikasi ini di komputer/laptop Anda sendiri (Windows atau Mac) tanpa perlu keahlian teknis tingkat lanjut. 
 
@@ -16,7 +16,7 @@ Sebelum kita mulai, pastikan komputer Anda sudah memiliki 3 aplikasi wajib ini. 
 2. **PostgreSQL (Versi 14 atau lebih baru)**
    * **Fungsi:** Ini adalah aplikasi "database" untuk menyimpan semua data (akun pendaftar, nilai ujian, pengaturan, dll).
    * **Cara Instal:** Buka website [postgresql.org/download](https://www.postgresql.org/download/), pilih sistem operasi Anda (Windows/Mac).
-   * **⚠�E�ESANGAT PENTING SAAT INSTALASI PostgreSQL:** Nanti Anda akan diminta membuat password untuk user bernama `postgres`. **Ingat baik-baik password ini!** Jangan sampai lupa, misalnya buat password `admin` atau `rahasia123` yang mudah Anda ingat.
+   * **笞・・SANGAT PENTING SAAT INSTALASI PostgreSQL:** Nanti Anda akan diminta membuat password untuk user bernama `postgres`. **Ingat baik-baik password ini!** Jangan sampai lupa, misalnya buat password `admin` atau `rahasia123` yang mudah Anda ingat.
 3. **Git**
    * **Fungsi:** Untuk mengambil kode (meng-clone) aplikasi ini dari internet ke komputer Anda.
    * **Cara Instal:** Buka [git-scm.com/downloads](https://git-scm.com/downloads) dan instal.
@@ -30,7 +30,7 @@ Sekarang kita akan mengambil aplikasinya.
 1. Buka aplikasi **Terminal** (di Mac) atau **Command Prompt / PowerShell** (di Windows).
 2. Ketik perintah ini persis seperti di bawah, lalu tekan Enter:
    ```bash
-   git clone https://github.com/salmanm-bibs/spmb-new.git
+   git clone https://github.com/fluffykitten/spmb.git spmb-new
    ```
    *(Ini akan mendownload folder aplikasi bernama "spmb-new" ke komputer Anda)*
 3. Masuk ke dalam folder aplikasi tersebut dengan perintah:
@@ -89,7 +89,7 @@ Aplikasi harus tahu **apa** password database Anda (yang dibuat di Tahap 1) dan 
    PORT=3001
    UPLOAD_DIR=./uploads
    ```
-   **⚠�E�EPENTING!** Coba perhatikan tulisan `MASUKKAN_PASSWORD_ANDA_DISINI`. Hapus tulisan tersebut, lalu **ganti dengan password PostgreSQL Anda yang asli (dari Tahap 1)**.
+   **笞・・PENTING!** Coba perhatikan tulisan `MASUKKAN_PASSWORD_ANDA_DISINI`. Hapus tulisan tersebut, lalu **ganti dengan password PostgreSQL Anda yang asli (dari Tahap 1)**.
    *(Contoh: Jika password Anda adalah "admin", maka pastikan URL-nya menjadi `postgresql://postgres:admin@127...`)*
    Simpan file tersebut!
 4. Berikutnya, kembali ke folder utama `spmb-new` (mundur satu folder dari `server`). 
@@ -117,7 +117,7 @@ Kita sudah punya database `spmb` yang *kosong*, sekarang aplikasi akan otomatis 
 
 ---
 
-## Tahap Terakhir: Menyalakan Aplikasinya! 🎉
+## Tahap Terakhir: Menyalakan Aplikasinya! 脂
 
 Sekarang semua sudah siap dan Anda tinggal menikmati hasilnya.
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, FileText, Clock, CheckCircle, Calendar, ClipboardCheck } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { useAcademicYear } from '../../contexts/AcademicYearContext';
 
 interface DashboardStats {
   totalApplicants: number;
@@ -23,6 +24,7 @@ export const AdminDashboard: React.FC = () => {
     pendingExamGrading: 0
   });
   const [loading, setLoading] = useState(true);
+  const { selectedYearId } = useAcademicYear();
 
   useEffect(() => {
     fetchStats();
@@ -54,11 +56,17 @@ export const AdminDashboard: React.FC = () => {
     return () => {
       channel.unsubscribe();
     };
-  }, []);
+  }, [selectedYearId]);
 
   const fetchStats = async () => {
     try {
       setLoading(true);
+
+      const applicantsBase = () => {
+        let q = supabase.from('applicants').select('*', { count: 'exact', head: true });
+        if (selectedYearId) q = q.eq('academic_year_id', selectedYearId);
+        return q;
+      };
 
       const [
         totalResult,
@@ -69,21 +77,10 @@ export const AdminDashboard: React.FC = () => {
         interviewsResult,
         pendingGradingResult
       ] = await Promise.all([
-        supabase
-          .from('applicants')
-          .select('*', { count: 'exact', head: true }),
-        supabase
-          .from('applicants')
-          .select('*', { count: 'exact', head: true })
-          .in('status', ['draft', 'submitted', 'pending']),
-        supabase
-          .from('applicants')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'accepted'),
-        supabase
-          .from('applicants')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'rejected'),
+        applicantsBase(),
+        (() => { let q = supabase.from('applicants').select('*', { count: 'exact', head: true }).in('status', ['draft', 'submitted', 'pending']); if (selectedYearId) q = q.eq('academic_year_id', selectedYearId); return q; })(),
+        (() => { let q = supabase.from('applicants').select('*', { count: 'exact', head: true }).eq('status', 'accepted'); if (selectedYearId) q = q.eq('academic_year_id', selectedYearId); return q; })(),
+        (() => { let q = supabase.from('applicants').select('*', { count: 'exact', head: true }).eq('status', 'rejected'); if (selectedYearId) q = q.eq('academic_year_id', selectedYearId); return q; })(),
         supabase
           .from('letter_templates')
           .select('*', { count: 'exact', head: true }),

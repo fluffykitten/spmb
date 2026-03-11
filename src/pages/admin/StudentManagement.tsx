@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import { useAcademicYear } from '../../contexts/AcademicYearContext';
 import { DataTable, Column } from '../../components/shared/DataTable';
 import { StatusBadge } from '../../components/shared/StatusBadge';
 import { ConfirmDialog } from '../../components/shared/ConfirmDialog';
@@ -48,6 +49,7 @@ export const StudentManagement: React.FC = () => {
     applicantId: null
   });
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
+  const { selectedYearId } = useAcademicYear();
   const [exportDialog, setExportDialog] = useState(false);
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [selectedApplicants, setSelectedApplicants] = useState<Set<string>>(new Set());
@@ -70,6 +72,7 @@ export const StudentManagement: React.FC = () => {
       const { data: applicantsData, error: applicantsError } = await supabase
         .from('applicants')
         .select('*')
+        .eq('academic_year_id', selectedYearId || '')
         .order('created_at', { ascending: false });
 
       if (applicantsError) {

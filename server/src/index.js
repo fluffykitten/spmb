@@ -13,6 +13,7 @@ import storageRoutes from './routes/storage.js';
 import whatsappRoutes from './routes/whatsapp.js';
 import applicantsRoutes from './routes/applicants.js';
 import wawancaraRoutes from './routes/wawancara.js';
+import academicYearsRoutes from './routes/academic-years.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -44,6 +45,7 @@ app.use('/api/storage', storageRoutes);
 app.use('/api/whatsapp', whatsappRoutes);
 app.use('/api/applicants', applicantsRoutes);
 app.use('/api/wawancara', wawancaraRoutes);
+app.use('/api/academic-years', academicYearsRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

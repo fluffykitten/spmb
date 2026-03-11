@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import { useAcademicYear } from '../../contexts/AcademicYearContext';
 import { TrendingUp, Users, Clock, CheckCircle, X as XCircle, FileText, Calendar, Download } from 'lucide-react';
 
 interface AnalyticsData {
@@ -29,10 +30,11 @@ export const Analytics: React.FC = () => {
     from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     to: new Date().toISOString().split('T')[0]
   });
+  const { selectedYearId } = useAcademicYear();
 
   useEffect(() => {
     fetchAnalytics();
-  }, [dateRange]);
+  }, [dateRange, selectedYearId]);
 
   const fetchAnalytics = async () => {
     try {
@@ -43,6 +45,7 @@ export const Analytics: React.FC = () => {
         .select('*')
         .gte('created_at', `${dateRange.from}T00:00:00`)
         .lte('created_at', `${dateRange.to}T23:59:59`)
+        .eq('academic_year_id', selectedYearId || '')
         .order('created_at', { ascending: true });
 
       if (error) throw error;
@@ -58,12 +61,12 @@ export const Analytics: React.FC = () => {
 
       const avgDays = processedApplicants.length > 0
         ? Math.round(
-            processedApplicants.reduce((sum, a) => {
-              const created = new Date(a.created_at).getTime();
-              const updated = new Date(a.updated_at).getTime();
-              return sum + (updated - created) / (1000 * 60 * 60 * 24);
-            }, 0) / processedApplicants.length
-          )
+          processedApplicants.reduce((sum, a) => {
+            const created = new Date(a.created_at).getTime();
+            const updated = new Date(a.updated_at).getTime();
+            return sum + (updated - created) / (1000 * 60 * 60 * 24);
+          }, 0) / processedApplicants.length
+        )
         : 0;
 
       const dailyMap = new Map<string, number>();

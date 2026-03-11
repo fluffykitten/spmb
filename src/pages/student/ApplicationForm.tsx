@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useAcademicYear } from '../../contexts/AcademicYearContext';
 import { supabase } from '../../lib/supabase';
 import { DynamicFormRenderer } from '../../components/DynamicFormRenderer';
 import { FormField, defaultFormSchema } from '../../lib/defaultFormSchema';
@@ -10,6 +11,7 @@ import { FIELD_NAMES, getFieldValue } from '../../lib/fieldConstants';
 
 export const ApplicationForm: React.FC = () => {
   const { user } = useAuth();
+  const { activeYear } = useAcademicYear();
   const navigate = useNavigate();
   const [schema, setSchema] = useState<FormField[]>(defaultFormSchema);
   const [formData, setFormData] = useState<Record<string, any>>({});
@@ -172,6 +174,7 @@ export const ApplicationForm: React.FC = () => {
             dynamic_data: formData,
             registration_batch_id: batchId,
             status: 'draft',
+            academic_year_id: activeYear?.id || null,
           });
 
         if (error) throw error;
@@ -273,6 +276,7 @@ export const ApplicationForm: React.FC = () => {
             registration_number: registrationNumber,
             registration_batch_id: batchId,
             status: 'submitted',
+            academic_year_id: activeYear?.id || null,
           })
           .select('id, registration_number')
           .single();

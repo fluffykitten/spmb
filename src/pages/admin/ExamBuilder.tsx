@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { FileText, Plus, Edit, Trash2, Eye, Clock, CheckCircle, ClipboardCheck } from 'lucide-react';
-import { format } from 'date-fns';
+import { useAcademicYear } from '../../contexts/AcademicYearContext';
+import { FileText, Plus, Edit, Trash2, Clock, CheckCircle, ClipboardCheck } from 'lucide-react';
 import { QuestionManager } from '../../components/admin/QuestionManager';
 import { ExamGrading } from '../../components/admin/ExamGrading';
 
@@ -22,10 +22,11 @@ export const ExamBuilder: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [editingExam, setEditingExam] = useState<{ id: string; title: string } | null>(null);
   const [activeTab, setActiveTab] = useState<'exams' | 'grading'>('exams');
+  const { selectedYearId, activeYear } = useAcademicYear();
 
   useEffect(() => {
     fetchExams();
-  }, []);
+  }, [selectedYearId]);
 
   const fetchExams = async () => {
     try {
@@ -33,6 +34,7 @@ export const ExamBuilder: React.FC = () => {
       const { data, error } = await supabase
         .from('exams')
         .select('*')
+        .eq('academic_year_id', selectedYearId || '')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -113,11 +115,10 @@ export const ExamBuilder: React.FC = () => {
       <div className="flex gap-2 border-b border-slate-200">
         <button
           onClick={() => setActiveTab('exams')}
-          className={`px-6 py-3 font-medium transition-colors relative ${
-            activeTab === 'exams'
-              ? 'text-blue-600'
-              : 'text-slate-600 hover:text-slate-800'
-          }`}
+          className={`px-6 py-3 font-medium transition-colors relative ${activeTab === 'exams'
+            ? 'text-blue-600'
+            : 'text-slate-600 hover:text-slate-800'
+            }`}
         >
           <div className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
@@ -129,11 +130,10 @@ export const ExamBuilder: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('grading')}
-          className={`px-6 py-3 font-medium transition-colors relative ${
-            activeTab === 'grading'
-              ? 'text-blue-600'
-              : 'text-slate-600 hover:text-slate-800'
-          }`}
+          className={`px-6 py-3 font-medium transition-colors relative ${activeTab === 'grading'
+            ? 'text-blue-600'
+            : 'text-slate-600 hover:text-slate-800'
+            }`}
         >
           <div className="flex items-center gap-2">
             <ClipboardCheck className="h-5 w-5" />
@@ -152,11 +152,10 @@ export const ExamBuilder: React.FC = () => {
               <button
                 key={status}
                 onClick={() => setFilterStatus(status)}
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  filterStatus === status
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
-                }`}
+                className={`px-4 py-2 rounded-lg transition-colors ${filterStatus === status
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
+                  }`}
               >
                 {status.charAt(0).toUpperCase() + status.slice(1)}
                 <span className="ml-2 font-semibold">
@@ -166,60 +165,60 @@ export const ExamBuilder: React.FC = () => {
             ))}
           </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredExams.map((exam) => (
-          <div key={exam.id} className="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-blue-600" />
-                <h3 className="font-semibold text-slate-800">{exam.title}</h3>
-              </div>
-              <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(exam.status)}`}>
-                {exam.status}
-              </span>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredExams.map((exam) => (
+              <div key={exam.id} className="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg transition-shadow">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-blue-600" />
+                    <h3 className="font-semibold text-slate-800">{exam.title}</h3>
+                  </div>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(exam.status)}`}>
+                    {exam.status}
+                  </span>
+                </div>
 
-            {exam.description && (
-              <p className="text-sm text-slate-600 mb-4 line-clamp-2">{exam.description}</p>
-            )}
+                {exam.description && (
+                  <p className="text-sm text-slate-600 mb-4 line-clamp-2">{exam.description}</p>
+                )}
 
-            <div className="space-y-2 text-sm text-slate-600">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                <span>Durasi: {exam.duration_minutes} menit</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4" />
-                <span>Passing Score: {exam.passing_score}%</span>
-              </div>
-            </div>
+                <div className="space-y-2 text-sm text-slate-600">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    <span>Durasi: {exam.duration_minutes} menit</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4" />
+                    <span>Passing Score: {exam.passing_score}%</span>
+                  </div>
+                </div>
 
-            <div className="mt-4 pt-4 border-t border-slate-200 flex gap-2">
-              {exam.status === 'draft' && (
-                <button
-                  onClick={() => handlePublish(exam.id)}
-                  className="flex-1 px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm"
-                >
-                  Publish
-                </button>
-              )}
-              <button
-                onClick={() => setEditingExam({ id: exam.id, title: exam.title })}
-                className="flex-1 px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm flex items-center justify-center gap-1"
-              >
-                <Edit className="h-4 w-4" />
-                Edit Soal
-              </button>
-              <button
-                onClick={() => handleDelete(exam.id)}
-                className="px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
+                <div className="mt-4 pt-4 border-t border-slate-200 flex gap-2">
+                  {exam.status === 'draft' && (
+                    <button
+                      onClick={() => handlePublish(exam.id)}
+                      className="flex-1 px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm"
+                    >
+                      Publish
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setEditingExam({ id: exam.id, title: exam.title })}
+                    className="flex-1 px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm flex items-center justify-center gap-1"
+                  >
+                    <Edit className="h-4 w-4" />
+                    Edit Soal
+                  </button>
+                  <button
+                    onClick={() => handleDelete(exam.id)}
+                    className="px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
           {filteredExams.length === 0 && (
             <div className="text-center py-12 bg-slate-50 rounded-xl">
@@ -239,6 +238,7 @@ export const ExamBuilder: React.FC = () => {
             setShowCreateModal(false);
             fetchExams();
           }}
+          academicYearId={activeYear?.id || selectedYearId || null}
         />
       )}
 
@@ -256,9 +256,10 @@ export const ExamBuilder: React.FC = () => {
 interface CreateExamModalProps {
   onClose: () => void;
   onSuccess: () => void;
+  academicYearId: string | null;
 }
 
-const CreateExamModal: React.FC<CreateExamModalProps> = ({ onClose, onSuccess }) => {
+const CreateExamModal: React.FC<CreateExamModalProps> = ({ onClose, onSuccess, academicYearId }) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -289,7 +290,8 @@ const CreateExamModal: React.FC<CreateExamModalProps> = ({ onClose, onSuccess })
           ...formData,
           created_by: user.id,
           status: 'draft',
-          target_audience: 'all'
+          target_audience: 'all',
+          academic_year_id: academicYearId,
         });
 
       if (error) throw error;

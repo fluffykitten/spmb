@@ -7,22 +7,29 @@ const router = Router();
 // POST /api/applicants/generate-registration-number
 router.post('/generate-registration-number', authenticateToken, async (req, res) => {
     try {
-        // Format: Academic Year (e.g., 2526) + Year (26) + Month (02) + Day (28) + sequence (020)
+        // Format: Academic Year Code (e.g., 2526) + Year (26) + Month (02) + Day (28) + sequence (020)
         // Example: 2526260228020
 
+        // Get academic year code from active academic year
+        const { rows: yearRows } = await pool.query(
+            "SELECT code FROM academic_years WHERE is_active = true LIMIT 1"
+        );
+
         const now = new Date();
-        const year = now.getFullYear();
+        const currentYear2Digit = now.getFullYear() % 100;
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const day = String(now.getDate()).padStart(2, '0');
 
-        // Calculate academic year (e.g., if month >= 7, it's 2425, else 2324 for early 2024)
-        // Based on user example: 2526 for year 2026.
-        const currentYear2Digit = year % 100;
-        let academicYear = "";
-        if (now.getMonth() >= 6) { // July or later
-            academicYear = `${currentYear2Digit}${currentYear2Digit + 1}`;
+        let academicYear;
+        if (yearRows.length > 0 && yearRows[0].code) {
+            academicYear = yearRows[0].code;
         } else {
-            academicYear = `${currentYear2Digit - 1}${currentYear2Digit}`;
+            // Fallback: calculate from date
+            if (now.getMonth() >= 6) {
+                academicYear = `${currentYear2Digit}${currentYear2Digit + 1}`;
+            } else {
+                academicYear = `${currentYear2Digit - 1}${currentYear2Digit}`;
+            }
         }
 
         const datePrefix = `${currentYear2Digit}${month}${day}`;

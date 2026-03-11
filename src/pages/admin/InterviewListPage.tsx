@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAcademicYear } from '../../contexts/AcademicYearContext';
 import { Users, PlayCircle, FileText, Filter, RefreshCw, Calendar, User } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -42,15 +43,17 @@ export default function InterviewListPage() {
     const [interviews, setInterviews] = useState<Interview[]>([]);
     const [loading, setLoading] = useState(true);
     const [filterStatus, setFilterStatus] = useState<string>('all');
+    const { selectedYearId } = useAcademicYear();
 
     useEffect(() => {
         loadInterviews();
-    }, []);
+    }, [selectedYearId]);
 
     const loadInterviews = async () => {
         try {
             setLoading(true);
-            const result = await apiFetch('/api/wawancara/interviews');
+            const query = selectedYearId ? `?academic_year_id=${selectedYearId}` : '';
+            const result = await apiFetch(`/api/wawancara/interviews${query}`);
             setInterviews(result.data || []);
         } catch (err) {
             console.error('Error loading interviews:', err);

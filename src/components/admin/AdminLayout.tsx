@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useAcademicYear } from '../../contexts/AcademicYearContext';
 import {
   LayoutDashboard,
   LogOut,
@@ -20,12 +21,14 @@ import {
   FileText,
   Settings,
   Menu,
-  Activity
+  Activity,
+  GraduationCap
 } from 'lucide-react';
 
 export const AdminLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { signOut, user } = useAuth();
+  const { allYears, selectedYearId, setSelectedYearId } = useAcademicYear();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -56,6 +59,7 @@ export const AdminLayout: React.FC = () => {
 
     { label: 'PENGATURAN', type: 'header' },
     { icon: UserCog, label: 'User Management', path: '/admin/users' },
+    { icon: GraduationCap, label: 'Tahun Pelajaran', path: '/admin/academic-years' },
     { icon: Waves, label: 'Gelombang Pendaftaran', path: '/admin/batches' },
     { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
     { icon: Settings, label: 'Konfigurasi', path: '/admin/settings' },
@@ -138,6 +142,22 @@ export const AdminLayout: React.FC = () => {
             </button>
             <div className="flex-1 lg:flex-none">
               <h1 className="text-xl font-bold text-slate-800">Administrator</h1>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-1.5 border border-slate-200">
+                <GraduationCap className="h-4 w-4 text-blue-600" />
+                <select
+                  value={selectedYearId || ''}
+                  onChange={(e) => setSelectedYearId(e.target.value)}
+                  className="bg-transparent text-sm font-medium text-slate-700 border-none focus:ring-0 cursor-pointer pr-6"
+                >
+                  {allYears.map((year) => (
+                    <option key={year.id} value={year.id}>
+                      {year.name}{year.is_active ? ' (Aktif)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
         </header>

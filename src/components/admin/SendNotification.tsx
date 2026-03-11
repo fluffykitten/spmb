@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Loader, Send, AlertCircle, CheckCircle, User, Users, Phone } from 'lucide-react';
-import { WhatsAppTemplate, sendWhatsAppNotification, formatPhoneNumber, validatePhoneNumber } from '../../lib/whatsappNotification';
+import { WhatsAppTemplate, sendWhatsAppNotification, validatePhoneNumber } from '../../lib/whatsappNotification';
 import { FIELD_NAMES, getFieldValue } from '../../lib/fieldConstants';
+import { VariableCheatSheet } from './VariableCheatSheet';
 
 type RecipientType = 'single' | 'multiple' | 'custom';
 
@@ -149,7 +150,7 @@ export const SendNotification: React.FC = () => {
       if (applicant && applicant.phone_number) {
         return [{
           phone: applicant.phone_number,
-          name: applicant.full_name,
+          name: applicant.full_name || '',
           applicantId: applicant.id
         }];
       }
@@ -159,11 +160,11 @@ export const SendNotification: React.FC = () => {
         .filter(a => a && a.phone_number)
         .map(a => ({
           phone: a!.phone_number!,
-          name: a!.full_name,
+          name: a!.full_name || '',
           applicantId: a!.id
         }));
     } else if (recipientType === 'custom' && customPhone) {
-      return [{ phone: customPhone, name: 'Custom Recipient' }];
+      return [{ phone: customPhone, name: 'Custom Recipient', applicantId: undefined }];
     }
 
     return [];
@@ -221,7 +222,6 @@ export const SendNotification: React.FC = () => {
       }
 
       const successCount = results.filter(r => r.success).length;
-      const failCount = results.filter(r => !r.success).length;
 
       setResult({
         success: successCount > 0,
@@ -247,7 +247,7 @@ export const SendNotification: React.FC = () => {
   };
 
   const filteredApplicants = applicants.filter(a =>
-    a.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (a.full_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
     (a.email && a.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
     (a.registration_number && a.registration_number.toLowerCase().includes(searchQuery.toLowerCase()))
   );
@@ -436,7 +436,10 @@ export const SendNotification: React.FC = () => {
 
       {selectedTemplate && (selectedTemplate.variables || []).length > 0 && (
         <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h3 className="text-lg font-semibold text-slate-800 mb-4">Fill Variables</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-slate-800">Fill Variables</h3>
+            <VariableCheatSheet />
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {(selectedTemplate.variables || []).map((variable) => (
@@ -482,9 +485,8 @@ export const SendNotification: React.FC = () => {
       )}
 
       {result && (
-        <div className={`bg-white rounded-xl border ${
-          result.success ? 'border-emerald-200' : 'border-red-200'
-        } p-6`}>
+        <div className={`bg-white rounded-xl border ${result.success ? 'border-emerald-200' : 'border-red-200'
+          } p-6`}>
           <div className="flex items-start gap-3 mb-4">
             {result.success ? (
               <CheckCircle className="h-6 w-6 text-emerald-600 flex-shrink-0" />
@@ -506,11 +508,10 @@ export const SendNotification: React.FC = () => {
               {result.details.map((detail: any, index: number) => (
                 <div
                   key={index}
-                  className={`p-3 rounded-lg text-sm ${
-                    detail.success
-                      ? 'bg-emerald-50 text-emerald-900'
-                      : 'bg-red-50 text-red-900'
-                  }`}
+                  className={`p-3 rounded-lg text-sm ${detail.success
+                    ? 'bg-emerald-50 text-emerald-900'
+                    : 'bg-red-50 text-red-900'
+                    }`}
                 >
                   <span className="font-medium">{detail.name}</span> - {detail.success ? 'Sent' : detail.error}
                 </div>

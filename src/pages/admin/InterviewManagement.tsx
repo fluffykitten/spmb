@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { useAcademicYear } from '../../contexts/AcademicYearContext';
 import { Calendar, Clock, MapPin, Video, CheckCircle, XCircle, Edit2, User, AlertTriangle, RefreshCw, Mail, Send, ChevronDown, ChevronUp, ClipboardList } from 'lucide-react';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
@@ -26,6 +27,7 @@ interface InterviewRequest {
     id: string;
     registration_number: string;
     dynamic_data: any;
+    academic_year_id?: string;
   };
   interviewer?: {
     id: string;
@@ -65,6 +67,7 @@ export const InterviewManagement: React.FC = () => {
   const [resendingEmail, setResendingEmail] = useState<{ [key: string]: boolean }>({});
   const [emailLogs, setEmailLogs] = useState<{ [key: string]: EmailLog[] }>({});
   const [showEmailLogs, setShowEmailLogs] = useState<{ [key: string]: boolean }>({});
+  const { selectedYearId } = useAcademicYear();
 
   useEffect(() => {
     loadData();
@@ -88,7 +91,7 @@ export const InterviewManagement: React.FC = () => {
     return () => {
       interviewerSubscription.unsubscribe();
     };
-  }, []);
+  }, [selectedYearId]);
 
   const loadData = async () => {
     try {
@@ -126,7 +129,7 @@ export const InterviewManagement: React.FC = () => {
 
     const { data: applicantsData } = await supabase
       .from('applicants')
-      .select('id, registration_number, dynamic_data')
+      .select('id, registration_number, dynamic_data, academic_year_id')
       .in('id', applicantIds);
 
     let interviewersData: any[] = [];
@@ -147,7 +150,11 @@ export const InterviewManagement: React.FC = () => {
       interviewer: item.interviewer_id ? interviewersMap.get(item.interviewer_id) : null
     }));
 
-    setRequests(formatted as any);
+    const filteredForYear = formatted.filter((item: any) =>
+      !selectedYearId || (item.applicant && item.applicant.academic_year_id === selectedYearId)
+    );
+
+    setRequests(filteredForYear as any);
   };
 
   const loadInterviewers = async () => {
@@ -748,7 +755,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ request, interviewers, onRefr
 
             let meetingDetails = '';
             if (request.proposed_type === 'online' && formData.meeting_link) {
-              meetingDetails = `Link Meeting: ${formData.meeting_link}`;
+              meetingDetails = formData.meeting_link;
             } else if (request.proposed_type === 'offline') {
               let schoolAddress = 'Alamat Sekolah';
               try {
@@ -763,7 +770,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ request, interviewers, onRefr
               } catch (e) {
                 console.error('Gagal mengambil alamat sekolah', e);
               }
-              meetingDetails = `Lokasi: ${schoolAddress}`;
+              meetingDetails = schoolAddress;
             }
 
             await sendWhatsAppNotification({
@@ -774,7 +781,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ request, interviewers, onRefr
                 interview_date: interviewDate,
                 interview_time: interviewTime,
                 interview_type: interviewType,
-                meeting_details: meetingDetails,
+                meeting_link: meetingDetails,
                 admin_notes: formData.admin_notes || ''
               },
               applicantId: request.applicant_id

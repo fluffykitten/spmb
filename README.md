@@ -64,7 +64,7 @@ Panduan ini berisi langkah-langkah lengkap untuk menjalankan dan mendeploy aplik
 #### Langkah Instalasi
 1. **Clone Repository Anda**
 ```bash
-git clone https://github.com/salmanm-bibs/spmb-new.git
+git clone https://github.com/fluffykitten/spmb.git spmb-new
 cd spmb-new
 ```
 
@@ -154,7 +154,7 @@ GRANT ALL PRIVILEGES ON DATABASE spmb TO admin_spmb;
 Masuk ke `/var/www/` dan pull aplikasi Anda:
 ```bash
 cd /var/www
-sudo git clone https://github.com/salmanm-bibs/spmb-new.git
+sudo git clone https://github.com/fluffykitten/spmb.git spmb-new
 sudo chown -R $USER:$USER /var/www/spmb-new
 cd spmb-new
 ```
